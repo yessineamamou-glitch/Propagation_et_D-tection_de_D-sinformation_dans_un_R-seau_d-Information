@@ -1,0 +1,20 @@
+# Compiled files
+*.exe
+*.o
+*.out
+
+# Build folders
+bin/
+obj/
+build/
+
+# Code::Blocks files
+*.layout
+*.depend
+
+# Logs
+*.log
+
+# System files
+Thumbs.db
+.DS_Store
