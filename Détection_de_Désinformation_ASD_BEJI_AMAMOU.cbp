@@ -31,8 +31,6 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="../../ELTARTICLE.h" />
-		<Unit filename="../../LISTE.h" />
 		<Unit filename="ELTARTICLE.c">
 			<Option compilerVar="CC" />
 		</Unit>

@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1774370750 source:c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\eltarticle.c
+	"ELTARTICLE.h"
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
+1774370696 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\eltarticle.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+
+1774371131 source:c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\liste.c
+	<stdio.h>
+	<stdlib.h>
+	"LISTE.h"
+
+1774371188 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\liste.h
+	"ELTARTICLE.H"
+
