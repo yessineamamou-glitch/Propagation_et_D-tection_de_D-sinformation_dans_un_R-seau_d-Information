@@ -75,7 +75,7 @@ int ajouterArticle(grapheReseau g, ELEMENT art) {
     if (g == NULL || art == ELEMENT_VIDE || art->id < 0 || art->id >= g->V) {
         return 0;
     }
-    g->articles[art->id] = art;
+    g->articles[art->id] = art ;
     return 1;
 }
 
@@ -346,7 +346,7 @@ void chainePropagation(grapheReseau g, int idSrc) {
             int citeUnMembre = 0;
 
             for(j=1; j <= n && citeUnMembre == 0; j++) {
-                ELEMENT cible = recuperer(adj, j);
+                ELEMENT cible = recuperer(adj,j);
                 if(cible && estDansChaine[cible->id]) {
                     printf(" --> %s (%02d/%02d/%d)\n", triee[i]->titre,
                            triee[i]->jour, triee[i]->mois, triee[i]->annee);
@@ -421,9 +421,9 @@ void detruireGraphe(grapheReseau g) {
     if (g == NULL) {
             return;}
 
-    for (i = 0; i < g->V; i++) {
+    for (i = 0; i < g->V; i++){
         listeDetruire(g->adjList[i]);
-        if (g->articles[i] != ELEMENT_VIDE){
+        if (g->articles[i]!= ELEMENT_VIDE){
             free(g->articles[i]);
         }}
     free(g->adjList);

@@ -15,5 +15,17 @@ typedef struct{
 }articleStruct, *ELEMENT ;
 
 
+
+ELEMENT elementCreer();
+void elementLire(ELEMENT *e);
+void elementAfficher (ELEMENT e);
+void elementAffecter(ELEMENT *e1, ELEMENT e2);
+int elementComparer(ELEMENT e1, ELEMENT e2);
+int elementGetId(ELEMENT e);
+void elementCopier(ELEMENT *dest, ELEMENT source);
+void elementDetruire(ELEMENT e);
+
+
+
 #define ELEMENT_VIDE NULL
 #endif // ELTARTICLE_H_INCLUDED

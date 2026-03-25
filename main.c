@@ -46,7 +46,7 @@ int main() {
         printf("|  [8]  Classement chronologique global                  |\n");
         printf("|  [9]  Trouver le premier citant historique             |\n");
         printf("|  [10] Reconstituer la chaine de propagation            |\n");
-        printf("|  [11] Simulation de diffusion (BFS)                     |\n");
+        printf("|  [11] Simulation de diffusion (BFS)                    |\n");
         printf("|--------------------------------------------------------|\n");
         printf("|  [0]  Quitter le programme                             |\n");
         printf("==========================================================\n");

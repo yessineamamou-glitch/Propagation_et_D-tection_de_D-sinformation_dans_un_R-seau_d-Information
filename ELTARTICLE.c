@@ -45,10 +45,11 @@ void elementAffecter(ELEMENT *e1,ELEMENT e2){
     *e1=e2;
 }
 
-int elementComparer(ELEMENT *e1, ELEMENT e2){
+int elementComparer(ELEMENT e1, ELEMENT e2)
+{
     if (e1==ELEMENT_VIDE||e2==ELEMENT_VIDE){
         return -1;}
-    return (((*e1)->id)-(e2->id));
+    return (((e1)->id)-(e2->id));
 }
 
 

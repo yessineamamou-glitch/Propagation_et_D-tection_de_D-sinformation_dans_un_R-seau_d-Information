@@ -1,11 +1,11 @@
 # depslib dependency file v1.0
-1774370750 source:c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\eltarticle.c
+1774476476 source:c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\eltarticle.c
 	"ELTARTICLE.h"
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 
-1774370696 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\eltarticle.h
+1774476394 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\eltarticle.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -16,6 +16,17 @@
 	<stdlib.h>
 	"LISTE.h"
 
-1774371188 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\liste.h
+1774476651 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\liste.h
 	"ELTARTICLE.H"
+
+1774476394 source:c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<windows.h>
+	"GRAPHE.h"
+
+1774476394 c:\users\bejia\onedrive\desktop\projet asd2\propagation_et_d-tection_de_d-sinformation_dans_un_r-seau_d-information\graphe.h
+	"LISTE.h"
+	"ELTARTICLE.h"
 
