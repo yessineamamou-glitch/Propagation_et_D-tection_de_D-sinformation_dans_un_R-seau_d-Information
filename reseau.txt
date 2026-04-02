@@ -1,9 +1,0 @@
-# Liste des articles
-A 0 "La_verite_sur_le_vaccin" page_TunisieActu 8 15 3 2025 9 0
-A 1 "Etude_OMS_mal_interpretee" Kapitalis 45 15 3 2025 8 0
-A 3 "Communique_officiel" MinistereSante 90 15 3 2025 7 0
-
-# Liste des citations
-C 0 1
-C 0 3
-C 1 3

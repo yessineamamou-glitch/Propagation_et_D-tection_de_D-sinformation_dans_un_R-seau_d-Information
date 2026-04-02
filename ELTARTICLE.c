@@ -3,93 +3,60 @@
 #include <stdlib.h>
 #include <string.h>
 
-ELEMENT elementCreer()
-{
-    ELEMENT e;
-    e = (ELEMENT)malloc(sizeof(articleStruct));
-    if (e == ELEMENT_VIDE) {
+ELEMENT creerArticle(int id, const char *titre, const char *source,int score, int jour, int mois, int annee,int heure, int minute) {
+    ELEMENT art = (ELEMENT)malloc(sizeof(articleStruct));
+    if (art == NULL) {
+        fprintf(stderr, "Allocation memoire echouee\n");
         return ELEMENT_VIDE;
     }
-    return e;
+
+    art->id = id;
+    strncpy(art->titre, titre,99);
+    art->titre[99] = '\0';
+    strncpy(art->source, source,49);
+    art->source[49] = '\0';
+    art->score_fiabilite = score;
+    art->jour = jour;
+    art->mois = mois;
+    art->annee = annee;
+    art->heure = heure;
+    art->minute = minute;
+
+    return art;
 }
 
-
-void elementLire(ELEMENT *e){
-    if (*e == ELEMENT_VIDE)
-        {*e = elementCreer();}
-
-    printf("Entrez l'ID : ");
-    scanf("%d",&((*e)->id));
-    getchar();
-    printf("Titre : ");
-    scanf("%[^\n]s",(*e)->titre);
-    printf("\n");
-    printf("Source :");
-    scanf("%s",(*e)->source);
-    printf("\n");
-    printf("Score de fiabilite : ");
-    scanf("%d",&(*e)->score_fiabilite);
-    printf("\n");
-    printf("date:J M A H M ");
-    scanf("%d %d %d %d %d",&(*e)->jour,&(*e)->mois,&(*e)->annee,&(*e)->heure,&(*e)->minute);
+ELEMENT copierArticle(ELEMENT art) {
+    if (art == ELEMENT_VIDE) return ELEMENT_VIDE;
+    return creerArticle(art->id, art->titre, art->source, art->score_fiabilite,art->jour, art->mois, art->annee, art->heure, art->minute);
 }
 
-
-void elementAfficher(ELEMENT e){
-    if (e!= ELEMENT_VIDE) {
-        printf("%s id:%d , source:%s , score:%d , %d/%d/%d %d,%d",e->titre, e->id, e->source, e->score_fiabilite,e->jour, e->mois, e->annee, e->heure, e->minute);
-    printf("\n");}
+void afficherArticle(ELEMENT art) {
+    if (art == ELEMENT_VIDE) return;
+    printf("%s (id:%d, source:%s, score:%d, %02d/%02d/%d %02dh%02d)\n",art->titre, art->id, art->source, art->score_fiabilite,art->jour, art->mois, art->annee, art->heure, art->minute);
 }
 
-void elementAffecter(ELEMENT *e1,ELEMENT e2){
-    *e1=e2;
+void afficherArticleSimple(ELEMENT art) {
+    if (art == ELEMENT_VIDE) return;
+    printf("%s", art->titre);
 }
 
-int elementComparer(ELEMENT e1, ELEMENT e2)
-{
-    if (e1==ELEMENT_VIDE||e2==ELEMENT_VIDE){
-        return -1;}
-    return (((e1)->id)-(e2->id));
-}
-
-
-int elementGetId(ELEMENT e){
-    if (e ==ELEMENT_VIDE){
-        return -1;}
-    return e->id;
-}
-
-void elementCopier(ELEMENT *dest, ELEMENT source) {
-    if (source == ELEMENT_VIDE) {
-        *dest = ELEMENT_VIDE;
-        printf("copie impossible,la source est vide\n");
-        return;}
-
-    if (*dest==ELEMENT_VIDE){
-        *dest = elementCreer();
-        if (*dest == ELEMENT_VIDE) {
-            printf("echec de l allocation memoire ");
-            printf("\n");
-            return;
-        }
+void detruireArticle(ELEMENT art) {
+    if (art != ELEMENT_VIDE) {
+        free(art);
     }
-
-    (*dest)->id = source->id;
-    strcpy((*dest)->titre,source->titre);
-    strcpy((*dest)->source,source->source);
-    (*dest)->score_fiabilite =source->score_fiabilite;
-
-    (*dest)->jour = source->jour;
-    (*dest)->mois = source->mois;
-    (*dest)->annee = source->annee;
-    (*dest)->heure = source->heure;
-    (*dest)->minute = source->minute;
-
 }
 
-
-void elementDetruire(ELEMENT e) {
-    if (e !=ELEMENT_VIDE) {
-        free(e);}
+int egauxArticles(ELEMENT art1, ELEMENT art2) {
+    if (art1 == ELEMENT_VIDE || art2 == ELEMENT_VIDE) return 0;
+    return art1->id == art2->id;
 }
 
+char* articleToString(ELEMENT art) {
+    static char buffer[200];
+    if (art == ELEMENT_VIDE) {
+        strcpy(buffer,"Article vide");
+        return buffer;
+    }
+    snprintf(buffer,199,"%s(id:%d)",art->titre,art->id);
+    return buffer;
+}

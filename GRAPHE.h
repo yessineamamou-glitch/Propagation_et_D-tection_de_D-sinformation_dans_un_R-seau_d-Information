@@ -1,44 +1,59 @@
-#ifndef GRAPHE_H_INCLUDED
-#define GRAPHE_H_INCLUDED
+/***************************************************
+ * Fichier : GRAPHE.H
+ * TDA Graphe - Reseau d'Information
+ * Realisation avec liste d'adjacence
+ ***************************************************/
+
+#ifndef GRAPHE_H
+#define GRAPHE_H
+
 #include "LISTE.h"
-#include "ELTARTICLE.h"
 
 typedef struct {
     int V;
-    ELEMENT *articles; /* tableau des articles [0..V-1] */
-    LISTE *adjList; /* adjList[i] = LISTE des articles */
-                    /* cites par l’article i */
-    int *degre_in; /* degre_in[i] = nb d’articles */
-                    /* qui citent l’article i */
+    ELEMENT *articles;
+    LISTE *adjList;
+    int *degre_in;
 } *grapheReseau;
 
+/* ========== GESTION DU GRAPHE ========== */
 grapheReseau creerGraphe(int V);
-grapheReseau chargerGraphe(const char *fname);
+grapheReseau chargerGraphe(const char *filename);
 void detruireGraphe(grapheReseau g);
 int ajouterArticle(grapheReseau g, ELEMENT art);
-int ajouterCitation(grapheReseau g, int idSrc, int idDest);
 int supprimerArticle(grapheReseau g, int idArt);
+int ajouterCitation(grapheReseau g, int idSrc, int idDest);
 int supprimerCitation(grapheReseau g, int idSrc, int idDest);
 void afficherGraphe(grapheReseau g);
 
-//Interrogation Res
-
+/* ========== INTERROGATION DU RESEAU ========== */
 void articlesCites(grapheReseau g, int idSrc);
 void articlesCitants(grapheReseau g, int idDest);
 void sourcesOriginales(grapheReseau g);
 void articlesIsoles(grapheReseau g);
 ELEMENT articlePlusCite(grapheReseau g);
 
-//Analyse Chronologique
-
+/* ========== ANALYSE CHRONOLOGIQUE ========== */
 int comparerDates(ELEMENT art1, ELEMENT art2);
 void trierParDate(grapheReseau g);
 void premierCitant(grapheReseau g, int idDest);
 void chainePropagation(grapheReseau g, int idSrc);
 
-//BFS
-void simulationPropagation(grapheReseau g, int idDepart);
+/* ========== SIMULATION DE PROPAGATION - BFS ========== */
+void simulerPropagation(grapheReseau g, int idSrc);
+void articlesAccessibles(grapheReseau g, int idSrc);
 
+/* ========== DETECTION DE FAKE NEWS ========== */
+int analyserArticle(ELEMENT art);
+void analyserReseau(grapheReseau g);
+void articlesSuspectsCites(grapheReseau g);
 
+/* ========== BONUS ========== */
+void simulerSuppression(grapheReseau g, int idArt);
+int neutraliserPropagation(grapheReseau g, int idSrc, int idDest);
 
-#endif // GRAPHE_H_INCLUDED
+/* ========== FONCTIONS AUXILIAIRES ========== */
+int trouvIndexArticle(grapheReseau g, int id);
+void afficherStatistiques(grapheReseau g);
+
+#endif

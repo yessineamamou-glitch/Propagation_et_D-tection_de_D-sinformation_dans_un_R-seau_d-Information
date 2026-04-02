@@ -1,31 +1,36 @@
-#ifndef ELTARTICLE_H_INCLUDED
-#define ELTARTICLE_H_INCLUDED
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include<ctype.h>
+#ifndef ELTARTICLE_H
+#define ELTARTICLE_H
 
-typedef struct{
+typedef struct {
     int id;
     char titre[100];
     char source[50];
     int score_fiabilite;
     int jour, mois, annee;
     int heure, minute;
-}articleStruct, *ELEMENT ;
-
-
-
-ELEMENT elementCreer();
-void elementLire(ELEMENT *e);
-void elementAfficher (ELEMENT e);
-void elementAffecter(ELEMENT *e1, ELEMENT e2);
-int elementComparer(ELEMENT e1, ELEMENT e2);
-int elementGetId(ELEMENT e);
-void elementCopier(ELEMENT *dest, ELEMENT source);
-void elementDetruire(ELEMENT e);
-
-
+} articleStruct, *ELEMENT;
 
 #define ELEMENT_VIDE NULL
-#endif // ELTARTICLE_H_INCLUDED
+
+/* Crée un nouvel article */
+ELEMENT creerArticle(int id, const char *titre, const char *source, int score, int jour, int mois, int annee, int heure, int minute);
+
+/* Copie un article */
+ELEMENT copierArticle(ELEMENT art);
+
+/* Affiche un article */
+void afficherArticle(ELEMENT art);
+
+/* Affiche les infos courtes d'un article */
+void afficherArticleSimple(ELEMENT art);
+
+/* Libère la mémoire d'un article */
+void detruireArticle(ELEMENT art);
+
+/* Vérifie si deux articles sont identiques */
+int egauxArticles(ELEMENT art1, ELEMENT art2);
+
+/* Convertit un article en chaîne */
+char* articleToString(ELEMENT art);
+
+#endif

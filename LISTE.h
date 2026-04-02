@@ -1,20 +1,50 @@
-#ifndef LISTE_H_INCLUDED
-#define LISTE_H_INCLUDED
-#include"ELTARTICLE.H"
+/***************************************************
+ * Fichier : LISTE.H
+ * Realisation du TDA LISTE - Liste simplement chainee
+ * Projet : Propagation et Detection de Desinformation
+ ***************************************************/
 
-typedef struct Cellule {
-    ELEMENT donnee;
-    struct Cellule *suivant;
-} Cellule,*LISTE;
+#ifndef LISTE_H
+#define LISTE_H
 
-LISTE listeCreer(void);
-int estVide(LISTE L);
-int listeTaille(LISTE L);
-ELEMENT recuperer(LISTE L, int pos);
-int inserer(LISTE *L, ELEMENT e, int pos);
-int supprimer(LISTE *L, int pos);
-void listeDetruire(LISTE L);
+#include "ELTARTICLE.h"
 
-#define ELEMENT_VIDE NULL
-#define LISTE_VIDE NULL
-#endif // LISTE_H_INCLUDED
+typedef struct Noeud {
+    ELEMENT info;
+    struct Noeud *succ;
+} Noeud, *LISTE;
+
+/* Crée une liste vide */
+LISTE listeCreer();
+
+/* Copie une liste */
+LISTE listeCopier(LISTE l);
+
+/* Retourne la taille de la liste */
+int listeTaille(LISTE l);
+
+/* Insère un élément à une position donnée */
+int inserer(LISTE *l, ELEMENT elem, int pos);
+
+/* Récupère l'élément à une position donnée */
+ELEMENT recuperer(LISTE l, int pos);
+
+/* Recherche la position d'un élément */
+int rechercher(LISTE l, ELEMENT elem);
+
+/* Supprime l'élément à une position donnée */
+int supprimer(LISTE *l, int pos);
+
+/* Supprime tous les éléments de la liste */
+void listeDetruire(LISTE *l);
+
+/* Affiche tous les éléments */
+void afficherListe(LISTE l);
+
+/* Affiche la liste en format compact */
+void afficherListeCompacte(LISTE l, int afficherTous);
+
+/* Recherche un élément par son id */
+ELEMENT rechercherParId(LISTE l, int id);
+
+#endif
