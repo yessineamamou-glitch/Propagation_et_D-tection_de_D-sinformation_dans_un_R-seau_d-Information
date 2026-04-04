@@ -1,406 +1,496 @@
-#include "GRAPHE.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include "GRAPHE.h"
 
-void afficherMenu() {
-    printf("\n");
-    printf("|-------------------------------------------------------------------|\n");
-    printf("|                                                                   |\n");
-    printf("|         --------- RESEAU D INFORMATION ---------                  |\n");
-    printf("|                Propagation et Detection                           |\n");
-    printf("|                    de Desinformation                              |\n");
-    printf("|                                                                   |\n");
-    printf("|-------------------------------------------------------------------|\n");
-    printf("|                                                                   |\n");
-    printf("|-------------------- MENU PRINCIPAL -------------------------------|\n");
-    printf("|                                                                   |\n");
-    printf("|---------------------GESTION DU GRAPHE ----------------------------|\n");
-    printf("|  1. Charger un reseau depuis un fichier                           |\n");
-    printf("|  2. Ajouter un article                                            |\n");
-    printf("|  3. Ajouter une citation                                          |\n");
-    printf("|  4. Supprimer un article                                          |\n");
-    printf("|  5. Supprimer une citation                                        |\n");
-    printf("|  6. Afficher le reseau                                            |\n");
-    printf("|                                                                   |\n");
-    printf("|------------------- INTERROGATION DU RESEAU -----------------------|\n");
-    printf("|  7. Articles cites par un article                                 |\n");
-    printf("|  8. Articles qui citent un article                                |\n");
-    printf("|  9. Sources originales / Articles isoles                          |\n");
-    printf("|  10. Article le plus cite                                         |\n");
-    printf("|                                                                   |\n");
-    printf("|-------------------- ANALYSE CHRONOLOGIQUE ------------------------|\n");
-    printf("|  11. Trier par date de publication                                |\n");
-    printf("|  12. Premier article citant                                       |\n");
-    printf("|  13. Chaine de propagation                                        |\n");
-    printf("|                                                                   |\n");
-    printf("|------------------- SIMULATION DE PROPAGATION ---------------------|\n");
-    printf("|  14. Simuler la propagation (BFS)                                 |\n");
-    printf("|  15. Articles accessibles                                         |\n");
-    printf("|                                                                   |\n");
-    printf("| ------------------- DETECTION DE FAKE NEWS------------------------|\n");
-    printf("|  16. Analyser les articles (fake news)                            |\n");
-    printf("|  17. Articles suspects les plus cites                             |\n");
-    printf("|                                                                   |\n");
-    printf("| ------------------------- BONUS ----------------------------------|\n");
-    printf("|  18. Simuler la suppression d'un article                          |\n");
-    printf("|  19. Neutraliser une propagation                                  |\n");
-    printf("|  20. Afficher les statistiques                                    |\n");
-    printf("|                                                                   |\n");
-    printf("|                       00. Quitter                                 |\n");
-    printf("|-------------------------------------------------------------------|\n");
-    printf("|                                                                   |\n");
-    printf("\n   Votre choix :");
+void afficherMenuPrincipal() {
+    printf("\n\n");
+    printf("          ========================================\n");
+    printf("          |  RESEAU D'INFORMATION ET ANALYSE      |\n");
+    printf("          |  DE DESINFORMATION EN TUNISIE         |\n");
+    printf("          |=======================================|\n");
+    printf("          |                                       |\n");
+    printf("          |  1.  Charger reseau depuis fichier    |\n");
+    printf("          |  2.  Ajouter un article               |\n");
+    printf("          |  3.  Ajouter une citation             |\n");
+    printf("          |  4.  Supprimer un article             |\n");
+    printf("          |  5.  Supprimer une citation           |\n");
+    printf("          |  6.  Afficher le reseau               |\n");
+    printf("          |  7.  Articles cites par un article    |\n");
+    printf("          |  8.  Articles qui citent un article   |\n");
+    printf("          |  9.  Sources originales / Isoles      |\n");
+    printf("          |  10. Article le plus cite             |\n");
+    printf("          |  11. Trier par date de publication    |\n");
+    printf("          |  12. Afficher chaine de propagation   |\n");
+    printf("          |  13. Simulation de propagation (BFS)  |\n");
+    printf("          |  14. Analyser les articles            |\n");
+    printf("          |  15. Analyser les articles (fakes)    |\n");
+    printf("          |  16. Articles suspects les plus cites |\n");
+    printf("          |  17. [BONUS] Simuler suppression      |\n");
+    printf("          |  18. [BONUS] Neutraliser propagation  |\n");
+    printf("          |  0.  Quitter                          |\n");
+    printf("          |                                       |\n");
+    printf("          |=======================================|\n");
+    printf("          Entrez votre choix: ");
+}
+
+int saisirEntier() {
+    int valeur;
+    int resultat =scanf("%d", &valeur);
+
+    while (resultat != 1) {
+        while (getchar() != '\n');
+        printf("          Erreur: Veuillez entrer un nombre valide.\n");
+        printf("          Reessayez: ");
+        resultat = scanf("%d", &valeur);
+    }
+
+    while (getchar() != '\n');
+
+    return valeur;
+}
+
+int saisirId(grapheReseau *g) {
+    int id = saisirEntier();
+
+    while (id < 0 || id >= g->nombre_articles) {
+        printf("          Erreur: ID hors limites (0-%d).\n", g->nombre_articles - 1);
+        printf("          Reessayez: ");
+        id = saisirEntier();
+    }
+
+    return id;
+}
+
+int saisirScore() {
+    int score = saisirEntier();
+
+    while (score < 0 || score > 100) {
+        printf("          Erreur: Le score doit etre entre 0 et 100.\n");
+        printf("          Reessayez: ");
+        score = saisirEntier();
+    }
+
+    return score;
+}
+
+int saisirDate(int type) {
+    int valeur = saisirEntier();
+
+    if (type == 1) {
+        while (valeur < 1 || valeur > 31) {
+            printf("          Erreur: Le jour doit etre entre 1 et 31.\n");
+            printf("          Reessayez: ");
+            valeur = saisirEntier();
+        }
+    }
+    else if (type == 2) {
+        while (valeur < 1 || valeur > 12) {
+            printf("          Erreur: Le mois doit etre entre 1 et 12.\n");
+            printf("          Reessayez: ");
+            valeur = saisirEntier();
+        }
+    }
+    else if (type == 3) {
+        while (valeur < 2020 || valeur > 2030) {
+            printf("          Erreur: L'annee doit etre entre 2020 et 2030.\n");
+            printf("          Reessayez: ");
+            valeur = saisirEntier();
+        }
+    }
+    else if (type == 4) {
+        while (valeur < 0 || valeur > 23) {
+            printf("          Erreur: L'heure doit etre entre 0 et 23.\n");
+            printf("          Reessayez: ");
+            valeur = saisirEntier();
+        }
+    }
+    else if (type == 5) {
+        while (valeur < 0 || valeur > 59) {
+            printf("          Erreur: La minute doit etre entre 0 et 59.\n");
+            printf("          Reessayez: ");
+            valeur = saisirEntier();
+        }
+    }
+
+    return valeur;
+}
+
+void saisirChaineCaracteres(char *chaine, int max_length, const char *message) {
+    printf("          %s", message);
+
+    if (fgets(chaine, max_length, stdin) != NULL) {
+        int longueur = strlen(chaine);
+        if (longueur > 0 && chaine[longueur - 1] == '\n') {
+            chaine[longueur - 1] = '\0';
+        }
+    }
+
+    while (strlen(chaine) == 0 || strlen(chaine) >= max_length - 1) {
+        printf("          Erreur: Saisie invalide ou trop longue.\n");
+        printf("          %s", message);
+        if (fgets(chaine, max_length, stdin) != NULL) {
+            int longueur = strlen(chaine);
+            if (longueur > 0 && chaine[longueur - 1] == '\n') {
+                chaine[longueur - 1] = '\0';
+            }
+        }
+    }
+}
+
+int verifierArticleExiste(grapheReseau *g, int id) {
+    return g->articles[id] != NULL;
 }
 
 int main() {
-    grapheReseau g = NULL;
-    int choix;
-    char filename[256];
-    int id, id_src, id_dest, jour, mois, annee, heure, minute, score;
-    char titre[100], source[50];
+    system("cls");
+    grapheReseau g = createGraph(100);
+    chargerGraph(&g,"fichier.txt");
+    Sleep(2000);
+    system("cls");
 
-    while (1) {
-        afficherMenu();
-        scanf("%d", &choix);
-        getchar();
+    int choix = 1;
+    int idArticle, idSource, idDest;
+    ELEMENT nouvelArticle;
+    char titre[100];
+    char source[50];
 
-        printf("\n");
+    while (choix != 0) {
+        afficherMenuPrincipal();
+        choix = saisirEntier();
+        system("cls");
 
-        switch (choix) {
-            case 1:
+        if (choix == 1) {
+            chargerGraph(&g, "fichier.txt");
+            Sleep(1500);
+            system("cls");
+        }
+        else if (choix == 2) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article: ");
+            idArticle = saisirEntier();
+
+            if (verifierArticleExiste(&g, idArticle) == 1) {
+                printf("          Erreur: Un article avec cet ID existe deja.\n\n");
+                Sleep(2000);
                 system("cls");
-                printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-                printf("                    --------------------------------------- CHARGER UN RESEAU -----------------------------------------------------\n");
-                printf("\n                         Nom du fichier : ");
-                fgets(filename, sizeof(filename), stdin);
-                filename[strcspn(filename, "\n")] = 0;
+            }
+            else {
+                saisirChaineCaracteres(titre, 100, "Entrez le titre: ");
+                saisirChaineCaracteres(source, 50, "Entrez la source: ");
 
-                if (g != NULL) detruireGraphe(g);
-                g = chargerGraphe(filename);
+                printf("          Entrez le score de fiabilite (0-100): ");
+                int score = saisirScore();
 
-                if (g != NULL) {
-                    printf("                        Reseau charge avec succes !\n");
-                    Sleep(3000);
+                printf("          Entrez le jour (1-31): ");
+                int jour = saisirDate(1);
+
+                printf("          Entrez le mois (1-12): ");
+                int mois = saisirDate(2);
+
+                printf("          Entrez l'annee (2020-2030): ");
+                int annee = saisirDate(3);
+
+                printf("          Entrez l'heure (0-23): ");
+                int heure = saisirDate(4);
+
+                printf("          Entrez la minute (0-59): ");
+                int minute = saisirDate(5);
+
+                nouvelArticle = creerElement(idArticle, titre, source, score, jour, mois, annee, heure, minute);
+                ajouterArticle(&g, nouvelArticle);
+                free(nouvelArticle);
+                Sleep(2000);
+                system("cls");
+            }
+        }
+        else if (choix == 3) {
+            printf("\n");
+            printf("          Entrez l'ID source: ");
+            idSource = saisirId(&g);
+
+            if (verifierArticleExiste(&g, idSource) == 0) {
+                printf("          Erreur: L'article source n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                printf("          Entrez l'ID destination: ");
+                idDest = saisirId(&g);
+
+                if (verifierArticleExiste(&g, idDest) == 0) {
+                    printf("          Erreur: L'article destination n'existe pas.\n\n");
+                    Sleep(2000);
                     system("cls");
-                    afficherStatistiques(g);
-                } else {
-                    printf("                        Erreur lors du chargement du fichier\n");
                 }
-                break;
+                else if (idSource == idDest) {
+                    printf("          Erreur: Un article ne peut pas se citer lui-meme.\n\n");
+                    Sleep(2000);
+                    system("cls");
+                }
+                else {
+                    ajouterCitation(&g, idSource, idDest);
+                    Sleep(2000);
+                    system("cls");
+                }
+            }
+        }
+        else if (choix == 4) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article a supprimer: ");
+            idArticle = saisirId(&g);
 
-            case 2:
+            if (verifierArticleExiste(&g, idArticle) == 0) {
+                printf("          Erreur: L'article n'existe pas.\n\n");
+                Sleep(2000);
                 system("cls");
-                printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-                printf("                    --------------------------------------- AJOUTER UN ARTICLE -----------------------------------------------------\n");
-                if (g == NULL) {
-                    printf("\n\n                      Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
+            }
+            else {
+                supprimerArticle(&g, idArticle);
+                Sleep(2000);
+                system("cls");
+            }
+        }
+        else if (choix == 5) {
+            printf("\n");
+            printf("          Entrez l'ID source: ");
+            idSource = saisirId(&g);
 
-                printf("\n\n                        ID : ");
-                scanf("%d", &id);
+            if (verifierArticleExiste(&g, idSource) == 0) {
+                printf("          Erreur: L'article source n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                printf("          Entrez l'ID destination: ");
+                idDest = saisirId(&g);
+
+                if (verifierArticleExiste(&g, idDest) == 0) {
+                    printf("          Erreur: L'article destination n'existe pas.\n\n");
+                    Sleep(2000);
+                    system("cls");
+                }
+                else {
+                    supprimerCitation(&g, idSource, idDest);
+                    Sleep(2000);
+                    system("cls");
+                }
+            }
+        }
+        else if (choix == 6) {
+            afficherGraphe(&g);
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 7) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article: ");
+            idArticle = saisirId(&g);
+
+            if (verifierArticleExiste(&g, idArticle) == 0) {
+                printf("          Erreur: L'article n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                articlesCites(&g, idArticle);
+                Sleep(2000);
+                printf("          Appuyez sur Entree pour continuer...\n");
                 getchar();
+                system("cls");
+            }
+        }
+        else if (choix == 8) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article: ");
+            idArticle = saisirId(&g);
 
-                printf("\n\n                        Titre : ");
-                fgets(titre, sizeof(titre), stdin);
-                titre[strcspn(titre, "\n")] = 0;
-
-                printf("\n\n                        Source : ");
-                fgets(source, sizeof(source), stdin);
-                source[strcspn(source, "\n")] = 0;
-
-                printf("\n\n                        Score de fiabilite (0-100) : ");
-                scanf("%d", &score);
-
-                printf("\n\n                        Date (jour mois année) : ");
-                scanf("%d %d %d", &jour, &mois, &annee);
-
-                printf("\n\n                        Heure (heure minute) : ");
-                scanf("%d %d", &heure, &minute);
+            if (verifierArticleExiste(&g, idArticle) == 0) {
+                printf("          Erreur: L'article n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                articlesCitants(&g, idArticle);
+                Sleep(2000);
+                printf("          Appuyez sur Entree pour continuer...\n");
                 getchar();
-
-                ELEMENT art = creerArticle(id, titre, source, score, jour, mois, annee, heure, minute);
-                if (ajouterArticle(g, art)) {
-                    printf("\n\n                     Article ajoute avec succes !\n");
-                } else {
-                    printf("\n\n                     Erreur lors de l'ajout de l'article\n");
-                }
-                detruireArticle(art);
-                break;
-
-            case 3:
                 system("cls");
-                printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-                printf("                    --------------------------------------- AJOUTER UNE CITATION  -----------------------------------------------------\n");
-                if (g == NULL) {
-                    printf("Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
+            }
+        }
+        else if (choix == 9) {
+            printf("\n");
+            printf("          Choisir:\n");
+            printf("          1. Sources originales\n");
+            printf("          2. Articles isoles\n");
+            printf("          Votre choix: ");
+            int sous_choix = saisirEntier();
 
-                printf("\n\n                        ID source : ");
-                scanf("%d", &id_src);
-                printf("\n\n                        ID destination : ");
-                scanf("%d", &id_dest);
-                getchar();
+            while (sous_choix < 1 || sous_choix > 2) {
+                printf("          Erreur: Choix invalide (1 ou 2).\n");
+                printf("          Reessayez: ");
+                sous_choix = saisirEntier();
+            }
 
-                if (ajouterCitation(g, id_src, id_dest)) {
-                    printf("\n\n                         Citation ajoutee avec succes !\n");
-                } else {
-                    printf(" \n\n                        Erreur lors de l ajout de la citation\n");
-                }
-                break;
+            if (sous_choix == 1) {
+                sourcesOriginales(&g);
+            }
+            else if (sous_choix == 2) {
+                articlesIsoles(&g);
+            }
 
-            case 4:
-                system("cls");
-                printf("--------- SUPPRIMER UN ARTICLE ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 10) {
+            ELEMENT plus_cite = articlePlusCite(&g);
 
-                printf("\n\n                        ID de l'article : ");
-                scanf("%d", &id);
-                getchar();
-
-                if (supprimerArticle(g, id)) {
-                    printf("\n\n                         Article supprime avec succes !\n");
-                } else {
-                    printf("\n\n                        Erreur lors de la suppression de l article\n");
-                }
-                break;
-
-            case 5:
-                system("cls");
-                printf("--------- SUPPRIMER UNE CITATION ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-
-                printf("\n\n                        ID source : ");
-                scanf("%d", &id_src);
-                printf("\n\n                        ID destination : ");
-                scanf("%d", &id_dest);
-                getchar();
-
-                if (supprimerCitation(g, id_src, id_dest)) {
-                    printf("\n\n                        Citation supprimée avec succes !\n");
-                } else {
-                    printf("\n\n                        Erreur lors de la suppression de la citation\n");
-                }
-                break;
-
-            case 6:
-                system("cls");
-                printf("--------- AFFICHAGE DU RESEAU ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou créer un reseau\n");
-                    break;
-                }
-                afficherGraphe(g);
-                break;
-
-            case 7:
-                system("cls");
-                printf("--------- ARTICLES CITES ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID de l article : ");
-                scanf("%d", &id);
-                getchar();
-                articlesCites(g, id);
-                break;
-
-            case 8:
-                system("cls");
-                printf("--------- ARTICLES CITANTS ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d'abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID de l article : ");
-                scanf("%d", &id);
-                getchar();
-                articlesCitants(g, id);
-                break;
-
-            case 9:
-                system("cls");
-                printf("--------- SOURCES ORIGINALES ET ARTICLES ISOLES ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                sourcesOriginales(g);
+            if (plus_cite == ELEMENT_VIDE) {
+                printf("\n          Aucun article dans le reseau.\n\n");
+            }
+            else {
+                printf("\n          Article le plus cite:\n");
+                afficherElement(plus_cite);
                 printf("\n");
-                articlesIsoles(g);
-                break;
+                free(plus_cite);
+            }
 
-            case 10:
-                system("cls");
-                printf("--------- ARTICLE LE PLUS CITE ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                {
-                    ELEMENT plusCite = articlePlusCite(g);
-                    if (plusCite != ELEMENT_VIDE) {
-                        printf("--> ");
-                        afficherArticleSimple(plusCite);
-                        printf("\n\n                        (cite par %d articles)\n", g->degre_in[plusCite->id]);
-                    } else {
-                        printf("\n\n                        Aucun article disponible\n");
-                    }
-                }
-                break;
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 11) {
+            trierParDate(&g);
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 12) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article: ");
+            idArticle = saisirId(&g);
 
-            case 11:
+            if (verifierArticleExiste(&g, idArticle) == 0) {
+                printf("          Erreur: L'article n'existe pas.\n\n");
+                Sleep(2000);
                 system("cls");
-                printf("--------- TRI PAR DATE ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                trierParDate(g);
-                break;
-
-            case 12:
-                system("cls");
-                printf("--------- PREMIER CITANT ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID de l'article : ");
-                scanf("%d", &id);
+            }
+            else {
+                chainerPropagation(&g, idArticle);
+                Sleep(2000);
+                printf("          Appuyez sur Entree pour continuer...\n");
                 getchar();
-                premierCitant(g, id);
-                break;
-
-            case 13:
                 system("cls");
-                printf("--------- CHAINE DE PROPAGATION ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID de l article source : ");
-                scanf("%d", &id);
+            }
+        }
+        else if (choix == 13) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article: ");
+            idArticle = saisirId(&g);
+
+            if (verifierArticleExiste(&g, idArticle) == 0) {
+                printf("          Erreur: L'article n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                simulerPropagation(&g, idArticle);
+                Sleep(2000);
+                printf("          Appuyez sur Entree pour continuer...\n");
                 getchar();
-                chainePropagation(g, id);
-                break;
-
-            case 14:
                 system("cls");
-                printf("--------- SIMULATION DE PROPAGATION (BFS) ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID de l article source : ");
-                scanf("%d", &id);
+            }
+        }
+        else if (choix == 14) {
+            analyserReseau(&g);
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 15) {
+            analyserReseau(&g);
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 16) {
+            analyserReseau(&g);
+            Sleep(2000);
+            printf("          Appuyez sur Entree pour continuer...\n");
+            getchar();
+            system("cls");
+        }
+        else if (choix == 17) {
+            printf("\n");
+            printf("          Entrez l'ID de l'article a supprimer: ");
+            idArticle = saisirId(&g);
+
+            if (verifierArticleExiste(&g, idArticle) == 0) {
+                printf("          Erreur: L'article n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                simulerSuppression(&g, idArticle);
+                Sleep(2000);
+                printf("          Appuyez sur Entree pour continuer...\n");
                 getchar();
-                simulerPropagation(g, id);
-                break;
-
-            case 15:
                 system("cls");
-                printf("--------- ARTICLES ACCESSIBLES ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
+            }
+        }
+        else if (choix == 18) {
+            printf("\n");
+            printf("          Entrez l'ID source: ");
+            idSource = saisirId(&g);
+
+            if (verifierArticleExiste(&g, idSource) == 0) {
+                printf("          Erreur: L'article source n'existe pas.\n\n");
+                Sleep(2000);
+                system("cls");
+            }
+            else {
+                printf("          Entrez l'ID destination: ");
+                idDest = saisirId(&g);
+
+                if (verifierArticleExiste(&g, idDest) == 0) {
+                    printf("          Erreur: L'article destination n'existe pas.\n\n");
+                    Sleep(2000);
+                    system("cls");
                 }
-                printf("\n\n                        ID de l article source : ");
-                scanf("%d", &id);
-                getchar();
-                articlesAccessibles(g, id);
-                break;
-
-            case 16:
-                system("cls");
-                printf("--------- ANALYSE DU RESEAU ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
+                else {
+                    neutraliserPropagation(&g, idSource, idDest);
+                    Sleep(2000);
+                    system("cls");
                 }
-                analyserReseau(g);
-                break;
-
-            case 17:
-                system("cls");
-                printf("--------- ARTICLES SUSPECTS LES PLUS CITES ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                articlesSuspectsCites(g);
-                break;
-
-            case 18:
-                system("cls");
-                printf("--------- BONUS : SIMULER LA SUPPRESSION ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID de l'article : ");
-                scanf("%d", &id);
-                getchar();
-                simulerSuppression(g, id);
-                break;
-
-            case 19:
-                system("cls");
-                printf("--------- BONUS : NEUTRALISER LA PROPAGATION ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                printf("\n\n                        ID source : ");
-                scanf("%d", &id_src);
-                printf("\n\n                        ID destination : ");
-                scanf("%d", &id_dest);
-                getchar();
-                neutraliserPropagation(g, id_src, id_dest);
-                break;
-
-            case 20:
-                system("cls");
-                printf("--------- STATISTIQUES DU RESEAU ---------\n");
-                if (g == NULL) {
-                    printf("\n\n                        Veuillez d abord charger ou creer un reseau\n");
-                    break;
-                }
-                system("cls");
-                afficherStatistiques(g);
-                break;
-
-            case 0:
-                system("cls");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||                                            Au Revoir                                                    ||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||--------------------Merci d avoir utilise le systeme d analyse de desinformation.------------------------||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                        printf("||---------------------------------------------------------------------------------------------------------||\n");
-                if (g != NULL) detruireGraphe(g);
-                return 0;
-
-            default:
-                system("cls");
-                printf("\n\n\n\n\n\n\n\n\n\n\n\n");
-                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Choix invalide. Veuillez ressayer.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            }
+        }
+        else if (choix == 0) {
+            system("cls");
+            printf("\n\n");
+            printf("          |========================================|\n");
+            printf("          |                                        |\n");
+            printf("          |           Au revoir!                   |\n");
+            printf("          |                                        |\n");
+            printf("          |========================================|\n");
+            Sleep(2000);
+        }
+        else {
+            printf("          Erreur: Choix invalide (0-18).\n\n");
+            Sleep(2000);
+            system("cls");
         }
     }
+
+    detruireGraph(&g);
 
     return 0;
 }

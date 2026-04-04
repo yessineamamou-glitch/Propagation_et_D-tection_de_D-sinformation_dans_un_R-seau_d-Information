@@ -37,35 +37,39 @@
 	"GRAPHE.h"
 	"LISTE.h"
 
-1775161461 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.c
-	"GRAPHE.h"
-	"FAKESDB.h"
+1775305357 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
+	"GRAPHE.h"
 
-1775161461 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.h
+1775305357 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.h
 	"LISTE.h"
 
-1775161461 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.h
+1775305357 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.h
 	"ELTARTICLE.h"
 
-1775164140 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.h
+1775305357 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.h
 
 1775161461 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\fakesdb.h
 	<string.h>
 	<ctype.h>
 
-1775161461 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.c
+1775305357 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.c
 	<stdio.h>
 	<stdlib.h>
-	<string.h>
 	"LISTE.h"
 
-1775161461 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\main.c
-	"GRAPHE.h"
+1775305357 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<windows.h>
+	"GRAPHE.h"
+
+1775305357 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"ELTARTICLE.h"
 

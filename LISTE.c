@@ -1,186 +1,105 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "LISTE.h"
 
-LISTE listeCreer() {
+Liste creerListeVide() {
     return NULL;
 }
 
-LISTE listeCopier(LISTE l) {
-    LISTE nouvelle = listeCreer();
-    LISTE actuel = l;
-    int pos = 1;
-
-    while (actuel != NULL) {
-        inserer(&nouvelle, copierArticle(actuel->info), pos);
-        actuel = actuel->succ;
-        pos++;
-    }
-    return nouvelle;
+int estVide(Liste l) {
+    return l == NULL;
 }
 
-int listeTaille(LISTE l) {
-    int taille = 0;
-    LISTE actuel = l;
-    while (actuel != NULL) {
-        taille++;
-        actuel = actuel->succ;
+Liste inserer(Liste l, ELEMENT e) {
+    noeud *nouveau = (noeud *)malloc(sizeof(noeud));
+    nouveau->donnee = copierElement(e);
+    nouveau->suivant = l;
+    nouveau->precedent = NULL;
+
+    if (l != NULL) {
+        l->precedent = nouveau;
     }
-    return taille;
+
+    return nouveau;
 }
 
-int inserer(LISTE *l, ELEMENT elem, int pos) {
-    if (elem == ELEMENT_VIDE || l == NULL) {
-        return 0;
+Liste supprimerElement(Liste l, int id) {
+    if (estVide(l)) {
+        return l;
     }
 
-    int taille = listeTaille(*l);
-    if (pos < 1 || pos > taille + 1) {
-        return 0;
-    }
-
-    Noeud *nouveau = (Noeud*)malloc(sizeof(Noeud));
-    if (nouveau == NULL) {
-        fprintf(stderr, "Erreur : allocation memoire echouee\n");
-        return 0;
-    }
-
-    nouveau->info = copierArticle(elem);
-    nouveau->succ = NULL;
-
-    if (pos == 1) {
-        nouveau->succ = *l;
-        *l = nouveau;
-        return 1;
-    }
-
-    LISTE actuel = *l;
-    int cpt = 1;
-
-    while (cpt < pos - 1 && actuel != NULL) {
-        actuel = actuel->succ;
-        cpt++;
-    }
-
-    if (actuel == NULL) {
-        free(nouveau);
-        return 0;
-    }
-
-    nouveau->succ = actuel->succ;
-    actuel->succ = nouveau;
-
-    return 1;
-}
-
-ELEMENT recuperer(LISTE l, int pos) {
-    if (pos < 1) return ELEMENT_VIDE;
-
-    LISTE actuel = l;
-    int cpt = 1;
-
-    while (cpt < pos && actuel != NULL) {
-        actuel = actuel->succ;
-        cpt++;
-    }
-
-    if (actuel == NULL) return ELEMENT_VIDE;
-    return actuel->info;
-}
-
-int rechercher(LISTE l, ELEMENT elem) {
-    if (elem == ELEMENT_VIDE) return 0;
-
-    LISTE actuel = l;
-    int pos = 1;
-
-    while (actuel != NULL) {
-        if (egauxArticles(actuel->info, elem)) {
-            return pos;
+    if (l->donnee->id == id) {
+        noeud *temp = l;
+        l = l->suivant;
+        if (l != NULL) {
+            l->precedent = NULL;
         }
-        actuel = actuel->succ;
-        pos++;
-    }
-    return 0;
-}
-
-int supprimer(LISTE *l, int pos) {
-    if (l == NULL || *l == NULL || pos < 1) {
-        return 0;
-    }
-
-    if (pos == 1) {
-        Noeud *temp = *l;
-        *l = (*l)->succ;
-        detruireArticle(temp->info);
+        free(temp->donnee);
         free(temp);
-        return 1;
+        return l;
     }
 
-    LISTE actuel = *l;
-    int cpt = 1;
-
-    while (cpt < pos - 1 && actuel != NULL) {
-        actuel = actuel->succ;
-        cpt++;
-    }
-
-    if (actuel == NULL || actuel->succ == NULL) {
-        return 0;
-    }
-
-    Noeud *temp = actuel->succ;
-    actuel->succ = temp->succ;
-    detruireArticle(temp->info);
-    free(temp);
-
-    return 1;
-}
-
-void listeDetruire(LISTE *l) {
-    while (*l != NULL) {
-        supprimer(l, 1);
-    }
-}
-
-void afficherListe(LISTE l) {
-    LISTE actuel = l;
-    int pos = 1;
-
-    while (actuel != NULL) {
-        printf("  Pos %d : ", pos);
-        afficherArticle(actuel->info);
-        actuel = actuel->succ;
-        pos++;
-    }
-}
-
-void afficherListeCompacte(LISTE l, int afficherTous) {
-    LISTE actuel = l;
-    int pos = 0;
-
-    while (actuel != NULL && (afficherTous || pos < 3)) {
-        printf("--> ");
-        afficherArticleSimple(actuel->info);
-        printf("\n");
-        actuel = actuel->succ;
-        pos++;
-    }
-
-    if (!afficherTous && actuel != NULL) {
-        printf("... et %d autres\n", listeTaille(l) - 3);
-    }
-}
-
-ELEMENT rechercherParId(LISTE l, int id) {
-    LISTE actuel = l;
-
-    while (actuel != NULL) {
-        if (actuel->info->id == id) {
-            return actuel->info;
+    noeud *courant = l;
+    while (courant->suivant != NULL) {
+        if (courant->suivant->donnee->id == id) {
+            noeud *temp = courant->suivant;
+            courant->suivant = courant->suivant->suivant;
+            if (courant->suivant != NULL) {
+                courant->suivant->precedent = courant;
+            }
+            free(temp->donnee);
+            free(temp);
+            return l;
         }
-        actuel = actuel->succ;
+        courant = courant->suivant;
     }
-    return ELEMENT_VIDE;
+
+    return l;
+}
+
+ELEMENT obtenirElement(Liste l, int id) {
+    ELEMENT elt = ELEMENT_VIDE;
+
+    noeud *courant = l;
+    while (courant != ELEMENT_VIDE) {
+        if (courant->donnee->id == id) {
+            return copierElement(courant->donnee);
+        }
+        courant = courant->suivant;
+    }
+
+    return elt;
+}
+
+Liste afficherListe(Liste l) {
+    noeud *courant = l;
+    while (courant !=NULL) {
+        afficherElement(courant->donnee);
+        courant = courant->suivant;
+    }
+
+    return l;
+}
+
+Liste detruireListe(Liste l) {
+    noeud *courant = l;
+    while (courant != NULL) {
+        noeud *temp = courant;
+        courant = courant->suivant;
+        free(temp->donnee);
+        free(temp);
+    }
+
+    return NULL;
+}
+
+int obtenirTaille(Liste l) {
+    int compte = 0;
+    noeud *courant = l;
+    while (courant != NULL) {
+        compte++;
+        courant = courant->suivant;
+    }
+
+    return compte;
 }

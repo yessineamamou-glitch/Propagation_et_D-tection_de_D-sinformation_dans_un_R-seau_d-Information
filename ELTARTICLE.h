@@ -6,28 +6,19 @@ typedef struct {
     char titre[100];
     char source[50];
     int score_fiabilite;
-    int jour, mois, annee;
-    int heure, minute;
+    int jour;
+    int mois;
+    int annee;
+    int heure;
+    int minute;
 } articleStruct, *ELEMENT;
 
 #define ELEMENT_VIDE NULL
 
-
-ELEMENT creerArticle(int id, const char *titre, const char *source, int score, int jour, int mois, int annee, int heure, int minute);
-
-ELEMENT copierArticle(ELEMENT art);
-
-void afficherArticle(ELEMENT art);
-
-void afficherArticleSimple(ELEMENT art);
-
-
-void detruireArticle(ELEMENT art);
-
-
-int egauxArticles(ELEMENT art1, ELEMENT art2);
-
-
-char* articleToString(ELEMENT art);
+ELEMENT creerElement(int id, char titre[100], char source[50], int score_fiabilite, int jour, int mois, int annee, int heure, int minute);
+ELEMENT copierElement(ELEMENT e);
+int comparerElement(ELEMENT e1, ELEMENT e2);
+int egalElement(ELEMENT e1, ELEMENT e2);
+void afficherElement(ELEMENT e);
 
 #endif
