@@ -198,7 +198,7 @@ int main() {
                 printf("          Entrez la minute (0-59): ");
                 int minute = saisirDate(5);
 
-                nouvelArticle = creerElement(idArticle, titre, source, score, jour, mois, annee, heure, minute);
+                nouvelArticle =elementCreer(idArticle, titre, source, score, jour, mois, annee, heure, minute);
                 ajouterArticle(&g, nouvelArticle);
                 free(nouvelArticle);
                 Sleep(2000);

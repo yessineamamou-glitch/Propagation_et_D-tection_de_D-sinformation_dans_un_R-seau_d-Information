@@ -3,59 +3,62 @@
 #include <string.h>
 #include "ELTARTICLE.h"
 
-ELEMENT creerElement(int id, char titre[100], char source[50], int score_fiabilite,
-                     int jour, int mois, int annee, int heure, int minute) {
+ELEMENT elementCreer(void) {
     ELEMENT e = (ELEMENT)malloc(sizeof(articleStruct));
-    e->id = id;
-    strcpy(e->titre, titre);
-    strcpy(e->source, source);
-    e->score_fiabilite = score_fiabilite;
-    e->jour = jour;
-    e->mois = mois;
-    e->annee = annee;
-    e->heure = heure;
-    e->minute = minute;
-
+    if (!e) {
+        printf("\nErreur d'allocation ELEMENT");
+    }
     return e;
 }
 
-ELEMENT copierElement(ELEMENT e) {
-    ELEMENT copie = (ELEMENT)malloc(sizeof(articleStruct));
-    copie->id = e->id;
-    strcpy(copie->titre, e->titre);
-    strcpy(copie->source, e->source);
-    copie->score_fiabilite = e->score_fiabilite;
-    copie->jour = e->jour;
-    copie->mois = e->mois;
-    copie->annee = e->annee;
-    copie->heure = e->heure;
-    copie->minute = e->minute;
+void elementDetruire(ELEMENT e) {
+    if (e != NULL) {
+        free(e);
+    }
+}
 
+void elementAffecter(ELEMENT *e1, ELEMENT e2) {
+    *e1 = e2;
+}
+
+void elementLire(ELEMENT *e) {
+    *e = elementCreer();
+    printf("ID : "); scanf("%d", &((*e)->id));
+    printf("Titre : "); scanf("%s", (*e)->titre);
+    printf("Source : "); scanf("%s", (*e)->source);
+    printf("Score (0-10) : "); scanf("%d", &((*e)->score_fiabilite));
+    printf("Date (JJ MM AAAA) : ");
+    scanf("%d %d %d", &((*e)->jour), &((*e)->mois), &((*e)->annee));
+    printf("Heure (HH MM) : ");
+    scanf("%d %d", &((*e)->heure), &((*e)->minute));
+}
+
+ELEMENT elementCopier(ELEMENT e) {
+    ELEMENT copie = elementCreer();
+    if (copie != NULL && e != NULL) {
+        copie->id = e->id;
+        strcpy(copie->titre, e->titre);
+        strcpy(copie->source, e->source);
+        copie->score_fiabilite = e->score_fiabilite;
+        copie->jour = e->jour;
+        copie->mois = e->mois;
+        copie->annee = e->annee;
+        copie->heure = e->heure;
+        copie->minute = e->minute;
+    }
     return copie;
 }
 
-int comparerElement(ELEMENT e1, ELEMENT e2) {
-    int x=0;
-    if (e1->id < e2->id) {
-        x=-1;
-    }
-    else if (e1->id > e2->id) {
-        x=1;
-    }
-
-    return x;
+int elementComparer(ELEMENT e1, ELEMENT e2) {
+    if (e1->id < e2->id) return -1;
+    if (e1->id > e2->id) return 1;
+    return 0;
 }
 
-
-void afficherElement(ELEMENT e) {
-    printf("ID: %d | Titre: %s | Source: %s | Score: %d | Date: %02d/%02d/%d %02d:%02d\n",
-           e->id,
-           e->titre,
-           e->source,
-           e->score_fiabilite,
-           e->jour,
-           e->mois,
-           e->annee,
-           e->heure,
-           e->minute);
+void elementAfficher(ELEMENT e) {
+    if (e != NULL) {
+        printf("ID: %d | Titre: %s | Source: %s | Score: %d | Date: %02d/%02d/%d %02d:%02d\n",
+               e->id, e->titre, e->source, e->score_fiabilite,
+               e->jour, e->mois, e->annee, e->heure, e->minute);
+    }
 }

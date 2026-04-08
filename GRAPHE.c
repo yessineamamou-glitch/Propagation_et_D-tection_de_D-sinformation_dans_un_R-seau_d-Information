@@ -6,570 +6,248 @@
 grapheReseau createGraph(int V) {
     grapheReseau g;
     g.nombre_articles = V;
-    g.articles = (ELEMENT *)malloc(V * sizeof(ELEMENT));  // lena sta3malna . fi blasset -> khatr grapheReseau esem structure mouch pointeur
-    g.adjacence = (Liste *)malloc(V * sizeof(Liste));
+    g.articles = (ELEMENT *)malloc(V * sizeof(ELEMENT));
+    g.adjacence = (LISTE *)malloc(V * sizeof(LISTE));
 
-    int i = 0;
-    while (i < V) {
+    for (int i = 0; i < V; i++) {
         g.articles[i] = NULL;
-        g.adjacence[i] = creerListeVide();
-        i++;
+        g.adjacence[i] = listeCreer();
     }
-
     return g;
 }
 
 void chargerGraph(grapheReseau *g, const char *filename) {
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        printf("Fichier %s non trouve.\n", filename);
-        return;
-    }
+    if (!file) return;
 
     char ligne[256];
-    int compte_articles = 0;
-
-    while (fgets(ligne, sizeof(ligne), file) != NULL) {
+    while (fgets(ligne, sizeof(ligne), file)) {
         if (ligne[0] == 'A') {
-            int id, score, jour, mois, annee, heure, minute;
-            char titre[100], source[50];
-            sscanf(ligne, "A %d %s %s %d %d %d %d %d %d",
-                   &id, titre, source, &score, &jour, &mois, &annee, &heure, &minute);
+            int id, score, j, m, a, h, mi;
+            char t[100], s[50];
+            sscanf(ligne, "A %d %s %s %d %d %d %d %d %d", &id, t, s, &score, &j, &m, &a, &h, &mi);
 
-            if (compte_articles < g->nombre_articles) {
-                g->articles[compte_articles] = creerElement(id, titre, source, score, jour, mois, annee, heure, minute);
-                compte_articles++;
-            }
+            ELEMENT e = elementCreer();
+            e->id = id; strcpy(e->titre, t); strcpy(e->source, s);
+            e->score_fiabilite = score; e->jour = j; e->mois = m;
+            e->annee = a; e->heure = h; e->minute = mi;
+
+            if (id < g->nombre_articles) g->articles[id] = e;
         }
         else if (ligne[0] == 'C') {
-            int id_src, id_dest;
-            sscanf(ligne, "C %d %d", &id_src, &id_dest);
-
-            ELEMENT elem = creerElement(id_dest, "", "", 0, 0, 0, 0, 0, 0);
-            g->adjacence[id_src] = inserer(g->adjacence[id_src], elem);
-            free(elem);
+            int src, dest;
+            sscanf(ligne, "C %d %d", &src, &dest);
+            if (src < g->nombre_articles) {
+                ELEMENT eDest = elementCreer();
+                eDest->id = dest;
+                inserer(g->adjacence[src], eDest, listeTaille(g->adjacence[src]) + 1);
+            }
         }
     }
-
     fclose(file);
-    printf("Graphe charge avec succes depuis %s\n", filename);
 }
 
 void detruireGraph(grapheReseau *g) {
-    int i = 0;
-    while (i < g->nombre_articles) {
-        g->adjacence[i] = detruireListe(g->adjacence[i]);
-        if (g->articles[i] != NULL) {
-            free(g->articles[i]);
-        }
-        i++;
+    for (int i = 0; i < g->nombre_articles; i++) {
+        listeDetruire(g->adjacence[i]);
+        if (g->articles[i]) elementDetruire(g->articles[i]);
     }
-
     free(g->articles);
     free(g->adjacence);
 }
 
 void ajouterArticle(grapheReseau *g, ELEMENT art) {
-    int i = 0;
-    int trouve = 0;
-
-    while (i < g->nombre_articles && trouve == 0) {
-        if (g->articles[i] == NULL) {
-            g->articles[i] = copierElement(art);
-            trouve = 1;
-        }
-        i++;
-    }
-
-    if (trouve == 1) {
+    if (art->id < g->nombre_articles) {
+        g->articles[art->id] = elementCopier(art);
         sauvegarderGraphe(g, "fichier.txt");
-        printf("Article ajoute avec succes et fichier sauvegarde.\n");
-    }
-    else {
-        printf("Impossible d'ajouter l'article (graphe plein).\n");
     }
 }
 
 void supprimerArticle(grapheReseau *g, int idArt) {
-    int i = 0;
-    while (i < g->nombre_articles) {
-        if (i != idArt) {
-            g->adjacence[i] = supprimerElement(g->adjacence[i], idArt);
+    for (int i = 0; i < g->nombre_articles; i++) {
+        for (int j = 1; j <= listeTaille(g->adjacence[i]); j++) {
+            ELEMENT e = recuperer(g->adjacence[i], j);
+            if (e && e->id == idArt) {
+                supprimer(g->adjacence[i], j);
+                break;
+            }
         }
-        i++;
     }
-
-    g->adjacence[idArt] = detruireListe(g->adjacence[idArt]);
-    g->adjacence[idArt] = creerListeVide();
-
-    if (g->articles[idArt] != NULL) {
-        free(g->articles[idArt]);
+    listeDetruire(g->adjacence[idArt]);
+    g->adjacence[idArt] = listeCreer();
+    if (g->articles[idArt]) {
+        elementDetruire(g->articles[idArt]);
         g->articles[idArt] = NULL;
     }
-
     sauvegarderGraphe(g, "fichier.txt");
-    printf("Article supprime avec succes et fichier sauvegarde.\n");
 }
 
-void ajouterCitation(grapheReseau *g, int idDrc, int idDest) {
-    ELEMENT elem = creerElement(idDest, "", "", 0, 0, 0, 0, 0, 0);
-    g->adjacence[idDrc] = inserer(g->adjacence[idDrc], elem);
-    free(elem);
+void ajouterCitation(grapheReseau *g, int idSrc, int idDest) {
+    ELEMENT e = elementCreer();
+    e->id = idDest;
+    inserer(g->adjacence[idSrc], e, listeTaille(g->adjacence[idSrc]) + 1);
     sauvegarderGraphe(g, "fichier.txt");
-    printf("Citation ajoutee avec succes et fichier sauvegarde.\n");
 }
 
-void supprimerCitation(grapheReseau *g, int idDrc, int idDest) {
-    g->adjacence[idDrc] = supprimerElement(g->adjacence[idDrc], idDest);
+void supprimerCitation(grapheReseau *g, int idSrc, int idDest) {
+    for (int i = 1; i <= listeTaille(g->adjacence[idSrc]); i++) {
+        ELEMENT e = recuperer(g->adjacence[idSrc], i);
+        if (e && e->id == idDest) {
+            supprimer(g->adjacence[idSrc], i);
+            break;
+        }
+    }
     sauvegarderGraphe(g, "fichier.txt");
-    printf("Citation supprimee avec succes et fichier sauvegarde.\n");
 }
 
 void afficherGraphe(grapheReseau *g) {
-    printf("\n");
-    printf("================================================\n");
-    printf("              AFFICHAGE DU RESEAU\n");
-    printf("================================================\n\n");
-
-    int i = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            afficherElement(g->articles[i]);
-
+    for (int i = 0; i < g->nombre_articles; i++) {
+        if (g->articles[i]) {
+            elementAfficher(g->articles[i]);
             printf("  Citations: ");
-            if (estVide(g->adjacence[i])) {
-                printf("Aucune\n");
+            LISTE L = g->adjacence[i];
+            NOEUD curr = L->tete;
+            while (curr) {
+                printf("%d ", curr->info->id);
+                curr = curr->suivant;
             }
-            else {
-                Liste courant = g->adjacence[i];
-                while (courant != NULL) {
-                    printf("%d ", courant->donnee->id);
-                    courant = courant->suivant;
-                }
-                printf("\n");
-            }
+            printf("\n");
         }
-        i++;
     }
-
-    printf("================================================\n\n");
 }
 
-void articlesCites(grapheReseau *g, int idDrc) {
-    printf("\n");
-    printf("Articles cites par l'article %d:\n", idDrc);
-
-    if (estVide(g->adjacence[idDrc])) {
-        printf("Aucun article cite.\n");
+void articlesCites(grapheReseau *g, int idSrc) {
+    LISTE L = g->adjacence[idSrc];
+    NOEUD curr = L->tete;
+    while (curr) {
+        if (g->articles[curr->info->id]) elementAfficher(g->articles[curr->info->id]);
+        curr = curr->suivant;
     }
-    else {
-        Liste courant = g->adjacence[idDrc];
-        while (courant != NULL) {
-            if (g->articles[courant->donnee->id] != NULL) {
-                afficherElement(g->articles[courant->donnee->id]);
-            }
-            courant = courant->suivant;
-        }
-    }
-    printf("\n");
 }
 
 void articlesCitants(grapheReseau *g, int idDest) {
-    printf("\n");
-    printf("Articles qui citent l'article %d:\n", idDest);
-
-    int trouve = 0;
-    int i = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            Liste courant = g->adjacence[i];
-            while (courant != NULL) {
-                if (courant->donnee->id == idDest) {
-                    afficherElement(g->articles[i]);
-                    trouve = 1;
-                }
-                courant = courant->suivant;
+    for (int i = 0; i < g->nombre_articles; i++) {
+        NOEUD curr = g->adjacence[i]->tete;
+        while (curr) {
+            if (curr->info->id == idDest) {
+                elementAfficher(g->articles[i]);
+                break;
             }
+            curr = curr->suivant;
         }
-        i++;
     }
-
-    if (trouve == 0) {
-        printf("Aucun article ne cite cet article.\n");
-    }
-    printf("\n");
 }
 
 void sourcesOriginales(grapheReseau *g) {
-    printf("\n");
-    printf("Sources originales (articles non cites):\n");
-
-    int i = 0;
-    int compte = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            int degre_entrant = 0;
-            int j = 0;
-            while (j < g->nombre_articles) {
-                if (g->articles[j] != NULL) {
-                    Liste courant = g->adjacence[j];
-                    while (courant != NULL) {
-                        if (courant->donnee->id == i) {
-                            degre_entrant++;
-                        }
-                        courant = courant->suivant;
-                    }
-                }
-                j++;
+    for (int i = 0; i < g->nombre_articles; i++) {
+        if (!g->articles[i]) continue;
+        int cite = 0;
+        for (int j = 0; j < g->nombre_articles; j++) {
+            NOEUD curr = g->adjacence[j]->tete;
+            while (curr) {
+                if (curr->info->id == i) { cite = 1; break; }
+                curr = curr->suivant;
             }
-
-            if (degre_entrant == 0) {
-                afficherElement(g->articles[i]);
-                compte++;
-            }
+            if (cite) break;
         }
-        i++;
+        if (!cite) elementAfficher(g->articles[i]);
     }
-
-    if (compte == 0) {
-        printf("Aucune source originale.\n");
-    }
-    printf("\n");
 }
 
 void articlesIsoles(grapheReseau *g) {
-    printf("\n");
-    printf("Articles isoles:\n");
-
-    int i = 0;
-    int compte = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            int degre_sortant = obtenirTaille(g->adjacence[i]);
-            int degre_entrant = 0;
-
-            int j = 0;
-            while (j < g->nombre_articles) {
-                if (g->articles[j] != NULL) {
-                    Liste courant = g->adjacence[j];
-                    while (courant != NULL) {
-                        if (courant->donnee->id == i) {
-                            degre_entrant++;
-                        }
-                        courant = courant->suivant;
-                    }
+    for (int i = 0; i < g->nombre_articles; i++) {
+        if (!g->articles[i]) continue;
+        if (listeTaille(g->adjacence[i]) == 0) {
+            int cite = 0;
+            for (int j = 0; j < g->nombre_articles; j++) {
+                NOEUD curr = g->adjacence[j]->tete;
+                while (curr) {
+                    if (curr->info->id == i) { cite = 1; break; }
+                    curr = curr->suivant;
                 }
-                j++;
             }
-
-            if (degre_sortant == 0 && degre_entrant == 0) {
-                afficherElement(g->articles[i]);
-                compte++;
-            }
+            if (!cite) elementAfficher(g->articles[i]);
         }
-        i++;
     }
-
-    if (compte == 0) {
-        printf("Aucun article isole.\n");
-    }
-    printf("\n");
 }
 
 ELEMENT articlePlusCite(grapheReseau *g) {
-    ELEMENT plus_cite = ELEMENT_VIDE;
-
-    int max_citations = -1;
-    int i = 0;
-
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != ELEMENT_VIDE) {
-            int degre_entrant = 0;
-            int j = 0;
-
-            while (j < g->nombre_articles) {
-                if (g->articles[j] != ELEMENT_VIDE) {
-                    Liste courant = g->adjacence[j];
-                    while (courant != ELEMENT_VIDE) {
-                        if (courant->donnee->id == i) {
-                            degre_entrant++;
-                        }
-                        courant = courant->suivant;
-                    }
-                }
-                j++;
-            }
-
-            if (degre_entrant > max_citations) {
-                max_citations = degre_entrant;
-                plus_cite = copierElement(g->articles[i]);
+    int max = -1, idMax = -1;
+    for (int i = 0; i < g->nombre_articles; i++) {
+        if (!g->articles[i]) continue;
+        int count = 0;
+        for (int j = 0; j < g->nombre_articles; j++) {
+            NOEUD curr = g->adjacence[j]->tete;
+            while (curr) {
+                if (curr->info->id == i) count++;
+                curr = curr->suivant;
             }
         }
-        i++;
+        if (count > max) { max = count; idMax = i; }
     }
-
-    return plus_cite;
+    return (idMax != -1) ? elementCopier(g->articles[idMax]) : NULL;
 }
 
 void trierParDate(grapheReseau *g) {
-    printf("\n");
-    printf("Articles tries par date de publication:\n");
-    printf("================================================\n\n");
-
-    int i = 0;
-    int j;
-    ELEMENT temp;
-
-    while (i < g->nombre_articles - 1) {
-        j = 0;
-        while (j < g->nombre_articles - i - 1) {
-            int compare = 0;
-
-            if (g->articles[j] != NULL && g->articles[j+1] != NULL) {
+    for (int i = 0; i < g->nombre_articles - 1; i++) {
+        for (int j = 0; j < g->nombre_articles - i - 1; j++) {
+            if (g->articles[j] && g->articles[j+1]) {
                 if (g->articles[j]->annee > g->articles[j+1]->annee) {
-                    compare = 1;
-                }
-                else if (g->articles[j]->annee == g->articles[j+1]->annee) {
-                    if (g->articles[j]->mois > g->articles[j+1]->mois) {
-                        compare = 1;
-                    }
-                    else if (g->articles[j]->mois == g->articles[j+1]->mois) {
-                        if (g->articles[j]->jour > g->articles[j+1]->jour) {
-                            compare = 1;
-                        }
-                    }
-                }
-
-                if (compare == 1) {
-                    temp = g->articles[j];
+                    ELEMENT tmp = g->articles[j];
                     g->articles[j] = g->articles[j+1];
-                    g->articles[j+1] = temp;
+                    g->articles[j+1] = tmp;
                 }
             }
-            j++;
         }
-        i++;
     }
-
-    i = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            afficherElement(g->articles[i]);
-        }
-        i++;
-    }
-
-    printf("================================================\n\n");
 }
 
-void chainerPropagation(grapheReseau *g, int idDrc) {
-    printf("\n");
-    printf("Chaine de propagation depuis l'article %d:\n", idDrc);
-    printf("Article source: %s\n", g->articles[idDrc]->titre);
-    printf("|\n");
+void simulerPropagation(grapheReseau *g, int idSrc) {
+    int *visite = calloc(g->nombre_articles, sizeof(int));
+    int *file = malloc(g->nombre_articles * sizeof(int));
+    int d = 0, f = 0;
 
-    Liste courant = g->adjacence[idDrc];
-    while (courant != NULL) {
-        printf("v\n");
-        printf("Article cité: %s (ID: %d)\n",
-               g->articles[courant->donnee->id]->titre,
-               g->articles[courant->donnee->id]->id);
-        courant = courant->suivant;
-    }
-
-    printf("\n");
-}
-
-void simulerPropagation(grapheReseau *g, int idDrc) {
-    printf("\n");
-    printf("Simulation de propagation (BFS) depuis l'article %d:\n", idDrc);
-    printf("================================================\n\n");
-
-    printf("Article initial: %s (ID: %d, Score: %d)\n\n",
-           g->articles[idDrc]->titre,
-           g->articles[idDrc]->id,
-           g->articles[idDrc]->score_fiabilite);
-
-    int *visite = (int *)malloc(g->nombre_articles * sizeof(int));
-    int i = 0;
-    while (i < g->nombre_articles) {
-        visite[i] = 0;
-        i++;
-    }
-
-    int *file = (int *)malloc(g->nombre_articles * sizeof(int));
-    int debut = 0;
-    int fin = 0;
-
-    file[fin] = idDrc;
-    fin++;
-    visite[idDrc] = 1;
-
-    printf("Articles accessibles:\n");
-
-    while (debut < fin) {
-        int courant_id = file[debut];
-        debut++;
-
-        if (courant_id != idDrc) {
-            afficherElement(g->articles[courant_id]);
-        }
-
-        Liste adj = g->adjacence[courant_id];
-        while (adj != NULL) {
-            if (visite[adj->donnee->id] == 0) {
-                visite[adj->donnee->id] = 1;
-                file[fin] = adj->donnee->id;
-                fin++;
+    file[f++] = idSrc;
+    visite[idSrc] = 1;
+    while (d < f) {
+        int c = file[d++];
+        if (c != idSrc) elementAfficher(g->articles[c]);
+        NOEUD curr = g->adjacence[c]->tete;
+        while (curr) {
+            if (!visite[curr->info->id]) {
+                visite[curr->info->id] = 1;
+                file[f++] = curr->info->id;
             }
-            adj = adj->suivant;
+            curr = curr->suivant;
         }
     }
-
-    printf("\n================================================\n\n");
-
-    free(visite);
-    free(file);
+    free(visite); free(file);
 }
 
 void analyserReseau(grapheReseau *g) {
-    printf("\n");
-    printf("================================================\n");
-    printf("    ANALYSE DES ARTICLES SUSPECTS\n");
-    printf("================================================\n\n");
-
-    char mots_suspects[8][50] = {
-        "cache",
-        "urgent",
-        "exclusif",
-        "censure",
-        "complot",
-        "secret",
-        "interdit",
-        "choc"
-    };
-
-    int i = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            int score_suspicion = 0;
-            int j = 0;
-
-            while (j < 8) {
-                if (strstr(g->articles[i]->titre, mots_suspects[j]) != NULL) {
-                    score_suspicion = score_suspicion + 10;
-                }
-                j++;
-            }
-
-            if (g->articles[i]->score_fiabilite < 50) {
-                score_suspicion = score_suspicion + 20;
-            }
-
-            if (score_suspicion >= 30) {
-                printf("[SUSPECT] ID: %d | Titre: %s\n",
-                       g->articles[i]->id,
-                       g->articles[i]->titre);
-                printf("          Score de suspicion: %d%%\n", score_suspicion);
-                printf("          Score de fiabilite: %d%%\n\n",
-                       g->articles[i]->score_fiabilite);
-            }
-        }
-        i++;
+    char *mots[] = {"cache", "urgent", "complot", "choc"};
+    for (int i = 0; i < g->nombre_articles; i++) {
+        if (!g->articles[i]) continue;
+        int suspicion = 0;
+        for (int j = 0; j < 4; j++) if (strstr(g->articles[i]->titre, mots[j])) suspicion += 20;
+        if (g->articles[i]->score_fiabilite < 50) suspicion += 30;
+        if (suspicion >= 40) printf("SUSPECT: %s (ID: %d)\n", g->articles[i]->titre, i);
     }
-
-    printf("================================================\n\n");
-}
-
-void simulerSuppression(grapheReseau *g, int idArt) {
-    printf("\n");
-    printf("Simulation de suppression de l'article %d:\n", idArt);
-    printf("================================================\n\n");
-
-    int articles_affectes = 0;
-    int i = 0;
-
-    while (i < g->nombre_articles) {
-        if (i != idArt && g->articles[i] != NULL) {
-            Liste courant = g->adjacence[i];
-            while (courant != NULL) {
-                if (courant->donnee->id == idArt) {
-                    articles_affectes++;
-                }
-                courant = courant->suivant;
-            }
-        }
-        i++;
-    }
-
-    printf("Article a supprimer: %s (ID: %d)\n",
-           g->articles[idArt]->titre,
-           g->articles[idArt]->id);
-    printf("Nombre d'articles affectes: %d\n", articles_affectes);
-    printf("Impact: %s\n",
-           articles_affectes > 0 ? "Propagation reduite" : "Aucun impact");
-
-    printf("================================================\n\n");
-}
-
-int neutraliserPropagation(grapheReseau *g, int idDrc, int idDest) {
-    int supprime = 0;
-
-    Liste courant = g->adjacence[idDrc];
-    while (courant != NULL) {
-        if (courant->donnee->id == idDest) {
-            g->adjacence[idDrc] = supprimerElement(g->adjacence[idDrc], idDest);
-            supprime = 1;
-        }
-        courant = courant->suivant;
-    }
-
-    if (supprime == 1) {
-        sauvegarderGraphe(g, "fichier.txt");
-        printf("Chemin de propagation neutralise et fichier sauvegarde.\n");
-    }
-    else {
-        printf("Aucun chemin direct a neutraliser.\n");
-    }
-
-    return supprime;
 }
 
 void sauvegarderGraphe(grapheReseau *g, const char *filename) {
-    FILE *file = fopen(filename, "w");
-    if (file == NULL) {
-        printf("Erreur: Impossible de sauvegarder le fichier.\n");
-        return;
+    FILE *f = fopen(filename, "w");
+    if (!f) return;
+    for (int i = 0; i < g->nombre_articles; i++) {
+        if (g->articles[i])
+            fprintf(f, "A %d %s %s %d %d %d %d %d %d\n", g->articles[i]->id, g->articles[i]->titre, g->articles[i]->source, g->articles[i]->score_fiabilite, g->articles[i]->jour, g->articles[i]->mois, g->articles[i]->annee, g->articles[i]->heure, g->articles[i]->minute);
     }
-
-    int i = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            fprintf(file, "A %d %s %s %d %d %d %d %d %d\n",
-                    g->articles[i]->id,
-                    g->articles[i]->titre,
-                    g->articles[i]->source,
-                    g->articles[i]->score_fiabilite,
-                    g->articles[i]->jour,
-                    g->articles[i]->mois,
-                    g->articles[i]->annee,
-                    g->articles[i]->heure,
-                    g->articles[i]->minute);
+    for (int i = 0; i < g->nombre_articles; i++) {
+        NOEUD curr = g->adjacence[i]->tete;
+        while (curr) {
+            fprintf(f, "C %d %d\n", i, curr->info->id);
+            curr = curr->suivant;
         }
-        i++;
     }
-
-    i = 0;
-    while (i < g->nombre_articles) {
-        if (g->articles[i] != NULL) {
-            Liste courant = g->adjacence[i];
-            while (courant != NULL) {
-                fprintf(file, "C %d %d\n", i, courant->donnee->id);
-                courant = courant->suivant;
-            }
-        }
-        i++;
-    }
-
-    fclose(file);
+    fclose(f);
 }
