@@ -46,9 +46,6 @@ int comparerElement(ELEMENT e1, ELEMENT e2) {
     return x;
 }
 
-int egalElement(ELEMENT e1, ELEMENT e2) {
-    return e1->id == e2->id;
-}
 
 void afficherElement(ELEMENT e) {
     printf("ID: %d | Titre: %s | Source: %s | Score: %d | Date: %02d/%02d/%d %02d:%02d\n",

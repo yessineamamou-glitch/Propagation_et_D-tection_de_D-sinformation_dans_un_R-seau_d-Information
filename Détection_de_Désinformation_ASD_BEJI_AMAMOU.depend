@@ -49,7 +49,7 @@
 1775305357 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.h
 	"ELTARTICLE.h"
 
-1775305357 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.h
+1775334710 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.h
 
 1775161461 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\fakesdb.h
 	<string.h>
@@ -67,7 +67,7 @@
 	<windows.h>
 	"GRAPHE.h"
 
-1775305357 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.c
+1775334680 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
