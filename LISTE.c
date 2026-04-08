@@ -2,104 +2,149 @@
 #include <stdlib.h>
 #include "LISTE.h"
 
-Liste creerListeVide() {
-    return NULL;
+static NOEUD noeudCreer(ELEMENT e) {
+    NOEUD n = (NOEUD)malloc(sizeof(structNoeud));
+    if (!n) {
+        printf("\nPlus d'espace");
+    } else {
+        n->info = e;
+        n->suivant = NULL;
+        n->precedent = NULL;
+    }
+    return n;
 }
 
-int estVide(Liste l) {
-    return l == NULL;
+LISTE listeCreer(void) {
+    LISTE L = (LISTE)malloc(sizeof(laStruct));
+    if (L != NULL) {
+        L->tete = NULL;
+        L->queue = NULL;
+        L->lg = 0;
+    }
+    return L;
 }
 
-Liste inserer(Liste l, ELEMENT e) {
-    noeud *nouveau = (noeud *)malloc(sizeof(noeud));
-    nouveau->donnee = copierElement(e);
-    nouveau->suivant = l;
-    nouveau->precedent = NULL;
-
-    if (l != NULL) {
-        l->precedent = nouveau;
-    }
-
-    return nouveau;
+int estVide(LISTE L) {
+    return (L->lg == 0);
 }
 
-Liste supprimerElement(Liste l, int id) {
-    if (estVide(l)) {
-        return l;
-    }
+int estSaturee(LISTE L) {
+    return 0;
+}
 
-    if (l->donnee->id == id) {
-        noeud *temp = l;
-        l = l->suivant;
-        if (l != NULL) {
-            l->precedent = NULL;
-        }
-        free(temp->donnee);
-        free(temp);
-        return l;
-    }
+int listeTaille(LISTE L) {
+    return L->lg;
+}
 
-    noeud *courant = l;
-    while (courant->suivant != NULL) {
-        if (courant->suivant->donnee->id == id) {
-            noeud *temp = courant->suivant;
-            courant->suivant = courant->suivant->suivant;
-            if (courant->suivant != NULL) {
-                courant->suivant->precedent = courant;
+int inserer(LISTE L, ELEMENT e, int pos) {
+    int succee = 1;
+    int i;
+    NOEUD n, p, q;
+
+    if (estSaturee(L)) {
+        printf("\nListe saturee");
+        succee = 0;
+    } else {
+        if ((pos < 1) || (pos > L->lg + 1)) {
+            printf("\nPosition invalide");
+            succee = 0;
+        } else {
+            n = noeudCreer(e);
+            if (L->lg == 0) {
+                L->tete = n;
+                L->queue = n;
+            } else {
+                if (pos == 1) {
+                    L->tete->precedent = n;
+                    n->suivant = L->tete;
+                    L->tete = n;
+                } else if (pos == (L->lg + 1)) {
+                    L->queue->suivant = n;
+                    n->precedent = L->queue;
+                    L->queue = n;
+                } else {
+                    q = L->tete;
+                    for (i = 1; i < pos; i++) {
+                        p = q;
+                        q = q->suivant;
+                    }
+                    p->suivant = n;
+                    n->precedent = p;
+                    n->suivant = q;
+                    q->precedent = n;
+                }
             }
-            free(temp->donnee);
-            free(temp);
-            return l;
+            (L->lg)++;
         }
-        courant = courant->suivant;
     }
-
-    return l;
+    return succee;
 }
 
-ELEMENT obtenirElement(Liste l, int id) {
-    ELEMENT elt = ELEMENT_VIDE;
+int supprimer(LISTE L, int pos) {
+    int i;
+    int succee = 1;
+    NOEUD p, q;
 
-    noeud *courant = l;
-    while (courant != ELEMENT_VIDE) {
-        if (courant->donnee->id == id) {
-            return copierElement(courant->donnee);
+    if (estVide(L)) {
+        printf("\nListe vide");
+        succee = 0;
+    } else {
+        if ((pos < 1) || (pos > L->lg)) {
+            printf("\nPosition invalide");
+            succee = 0;
+        } else {
+            if (L->lg == 1) {
+                q = L->tete;
+                L->tete = NULL;
+                L->queue = NULL;
+            } else {
+                if (pos == 1) {
+                    q = L->tete;
+                    L->tete = L->tete->suivant;
+                    L->tete->precedent = NULL;
+                } else if (pos == L->lg) {
+                    q = L->queue;
+                    L->queue = L->queue->precedent;
+                    L->queue->suivant = NULL;
+                } else {
+                    q = L->tete;
+                    for (i = 1; i < pos; i++) {
+                        p = q;
+                        q = q->suivant;
+                    }
+                    q->suivant->precedent = p;
+                    p->suivant = q->suivant;
+                }
+            }
+            free(q);
+            (L->lg)--;
         }
-        courant = courant->suivant;
     }
-
-    return elt;
+    return succee;
 }
 
-Liste afficherListe(Liste l) {
-    noeud *courant = l;
-    while (courant !=NULL) {
-        afficherElement(courant->donnee);
+ELEMENT recuperer(LISTE L, int pos) {
+    if (estVide(L) || pos < 1 || pos > L->lg) {
+        return NULL;
+    }
+    NOEUD courant = L->tete;
+    for (int i = 1; i < pos; i++) {
         courant = courant->suivant;
     }
-
-    return l;
+    return courant->info;
 }
 
-Liste detruireListe(Liste l) {
-    noeud *courant = l;
+void listeAfficher(LISTE L) {
+    NOEUD courant = L->tete;
     while (courant != NULL) {
-        noeud *temp = courant;
+        elementAfficher(courant->info);
         courant = courant->suivant;
-        free(temp->donnee);
-        free(temp);
     }
-
-    return NULL;
 }
 
-int obtenirTaille(Liste l) {
-    int compte = 0;
-    noeud *courant = l;
-    while (courant != NULL) {
-        compte++;
-        courant = courant->suivant;
+void listeDetruire(LISTE L) {
+    while (!estVide(L)) {
+        supprimer(L, 1);
     }
-
-    return compte;
+    free(L);
 }

@@ -3,21 +3,28 @@
 
 #include "ELTARTICLE.h"
 
-typedef struct noeud {
-    ELEMENT donnee;
-    struct noeud *suivant;
-    struct noeud *precedent;
-} noeud;
 
-typedef noeud *Liste;
+typedef struct structNoeud {
+    ELEMENT info;
+    struct structNoeud * precedent;
+    struct structNoeud * suivant;
+} structNoeud, * NOEUD;
 
-Liste creerListeVide();
-int estVide(Liste l);
-Liste inserer(Liste l, ELEMENT e);
-Liste supprimerElement(Liste l, int id);
-ELEMENT obtenirElement(Liste l, int id);
-Liste afficherListe(Liste l);
-Liste detruireListe(Liste l);
-int obtenirTaille(Liste l);
+typedef struct {
+    NOEUD tete;
+    NOEUD queue;
+    int lg;
+} laStruct, *LISTE;
+
+
+LISTE listeCreer(void);
+void listeDetruire(LISTE L);
+int estVide(LISTE L);
+int estSaturee(LISTE L);
+int listeTaille(LISTE L);
+ELEMENT recuperer(LISTE L, int pos);
+int inserer(LISTE L, ELEMENT e, int pos);
+int supprimer(LISTE L, int pos);
+void listeAfficher(LISTE L);
 
 #endif
