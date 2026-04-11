@@ -4,10 +4,12 @@
 #include "LISTE.h"
 
 typedef struct {
-    int nombre_articles;
+    int nombre_articles;//V
     ELEMENT *articles;
     LISTE *adjacence;
+  //degree in mich mawjouda
 } grapheReseau;
+
 
 grapheReseau createGraph(int V);
 void chargerGraph(grapheReseau *g, const char *filename);

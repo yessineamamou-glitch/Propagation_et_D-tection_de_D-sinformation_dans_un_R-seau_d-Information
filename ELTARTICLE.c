@@ -2,11 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ELTARTICLE.h"
-
-ELEMENT elementCreer(void) {
-    ELEMENT e = (ELEMENT)malloc(sizeof(articleStruct));
-    if (!e) {
+//idArticle, titre, source, score, jour, mois, annee, heure, minute
+ELEMENT elementCreer(ELEMENT e) {
+    ELEMENT e_copie = (ELEMENT)malloc(sizeof(articleStruct));
+    if (!e_copie) {
         printf("\nErreur d'allocation ELEMENT");
+    }
+    else{
+        e_copie->id = e->id;
+        strcpy(e_copie->titre, e->titre);
+        strcpy(e_copie->source, e->source);
+        e_copie->score_fiabilite = e->score_fiabilite;
+        e_copie->jour = e->jour;
+        e_copie->mois = e->mois;
+        e_copie->annee = e->annee;
+        e_copie->heure = e->heure;
+        e_copie->minute = e->minute;
     }
     return e;
 }
@@ -34,19 +45,19 @@ void elementLire(ELEMENT *e) {
 }
 
 ELEMENT elementCopier(ELEMENT e) {
-    ELEMENT copie = elementCreer();
-    if (copie != NULL && e != NULL) {
-        copie->id = e->id;
-        strcpy(copie->titre, e->titre);
-        strcpy(copie->source, e->source);
-        copie->score_fiabilite = e->score_fiabilite;
-        copie->jour = e->jour;
-        copie->mois = e->mois;
-        copie->annee = e->annee;
-        copie->heure = e->heure;
-        copie->minute = e->minute;
+    ELEMENT e_copie = elementCreer();
+    if (e_copie != NULL && e != NULL) {
+        e_copie->id = e->id;
+        strcpy(e_copie->titre, e->titre);
+        strcpy(e_copie->source, e->source);
+        e_copie->score_fiabilite = e->score_fiabilite;
+        e_copie->jour = e->jour;
+        e_copie->mois = e->mois;
+        e_copie->annee = e->annee;
+        e_copie->heure = e->heure;
+        e_copie->minute = e->minute;
     }
-    return copie;
+    return e_copie;
 }
 
 int elementComparer(ELEMENT e1, ELEMENT e2) {

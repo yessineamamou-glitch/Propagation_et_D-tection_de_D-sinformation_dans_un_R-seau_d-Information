@@ -3,28 +3,65 @@
 
 #include "ELTARTICLE.h"
 
+/* =========================================================
+    Citation LISTE:
+   ========================================================= */
+typedef struct s_citation_noeud {
+    int id_cite;
+    struct s_citation_noeud *suivant;
+} CitationListeNoeud, *CitationNoeudPtr;
 
-typedef struct structNoeud {
-    ELEMENT info;
-    struct structNoeud * precedent;
-    struct structNoeud * suivant;
-} structNoeud, * NOEUD;
-
-typedef struct {
-    NOEUD tete;
-    NOEUD queue;
+/* Wrapper struct manages ONLY the head and length */
+typedef struct s_citation_liste {
+    CitationNoeudPtr tete;
     int lg;
-} laStruct, *LISTE;
+} CitationListeStruct, *Citation_LISTE;
+
+/* =========================================================
+  MAIN LISTE:
+   ========================================================= */
+typedef struct s_main_noeud {
+    ELEMENT info;
+    Citation_LISTE citations;
+    struct s_main_noeud *suivant;
+} MainListeNoeud, *MainNoeudPtr;
 
 
-LISTE listeCreer(void);
-void listeDetruire(LISTE L);
-int estVide(LISTE L);
-int estSaturee(LISTE L);
-int listeTaille(LISTE L);
-ELEMENT recuperer(LISTE L, int pos);
-int inserer(LISTE L, ELEMENT e, int pos);
-int supprimer(LISTE L, int pos);
-void listeAfficher(LISTE L);
+typedef struct s_main_liste {
+    MainNoeudPtr tete;
+    int lg;
+} MainListeStruct, *LISTE;
 
+/* =========================================================
+   LISTE DES ELEMENTS (aritcle)  mawjouda deja fel graphe.h
+   ========================================================= */
+
+
+/* =========================================================
+   LISTE DES ENTIERS QUI CITE I DEGREE IN
+   ========================================================= */
+
+/* =========================================================
+   PROTOTYPES: CITATION LIST
+   ========================================================= */
+Citation_LISTE cit_listeCreer(void);
+void cit_listeDetruire(Citation_LISTE L);
+int cit_estVide(Citation_LISTE L);
+int cit_listeTaille(Citation_LISTE L);
+int cit_inserer(Citation_LISTE L, int id, int pos);
+int cit_supprimer(Citation_LISTE L, int pos);
+void cit_listeAfficher(Citation_LISTE L);
+Citation_LISTE cit_listeCopier(Citation_LISTE L);
+/* =========================================================
+   PROTOTYPES: MAIN LIST
+   ========================================================= */
+LISTE main_listeCreer(void);
+void main_listeDetruire(LISTE L);
+int main_estVide(LISTE L);
+int main_listeTaille(LISTE L);
+ELEMENT main_recuperer(LISTE L, int pos);
+int main_inserer(LISTE L, ELEMENT e, Citation_LISTE citations, int pos);
+int main_supprimer(LISTE L, int pos);
+void main_listeAfficher(LISTE L);
+LISTE main_listeCopier(LISTE L);
 #endif
