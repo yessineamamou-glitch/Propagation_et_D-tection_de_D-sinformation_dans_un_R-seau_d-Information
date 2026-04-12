@@ -2,36 +2,42 @@
 #define LISTE_H
 
 #include "ELTARTICLE.h"
+// article struct
+
+typedef struct {
+    int id;
+    char titre[100];
+    char source[50];
+    int score_fiabilite;
+    int jour;
+    int mois;
+    int annee;
+    int heure;
+    int minute;
+} articleStruct, *ELEMENT;
 
 /* =========================================================
-    Citation LISTE:
+    Citation LISTE: simplement chainee
    ========================================================= */
-typedef struct s_citation_noeud {
-    int id_cite;
-    struct s_citation_noeud *suivant;
-} CitationListeNoeud, *CitationNoeudPtr;
-
-/* Wrapper struct manages ONLY the head and length */
-typedef struct s_citation_liste {
-    CitationNoeudPtr tete;
-    int lg;
-} CitationListeStruct, *Citation_LISTE;
-
-/* =========================================================
-  MAIN LISTE:
-   ========================================================= */
-typedef struct s_main_noeud {
+typedef struct structNoeud {
     ELEMENT info;
-    Citation_LISTE citations;
-    struct s_main_noeud *suivant;
-} MainListeNoeud, *MainNoeudPtr;
+    struct structNoeud *suivant;
+} structNoeud, *NOEUD;
 
-
-typedef struct s_main_liste {
-    MainNoeudPtr tete;
+typedef struct {
+    NOEUD tete;
     int lg;
-} MainListeStruct, *LISTE;
-
+} laStruct, *LISTE;
+/* =========================================================
+  MAIN LISTE:graphe
+   ========================================================= */
+typedef struct {
+    int V; //lg de la liste article
+    ELEMENT *articles;
+    LISTE   *adjList;
+    LISTE   *citants;      // le contraire du  adjliste
+    int     *degre_in;    //degree in =lg de les liste citants   je essayer le plus possible " de respecter la memes structure dans lennonce
+} structuregraphe,*grapheReseau;
 /* =========================================================
    LISTE DES ELEMENTS (aritcle)  mawjouda deja fel graphe.h
    ========================================================= */
