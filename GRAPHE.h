@@ -2,14 +2,21 @@
 #define GRAPHE_H
 
 #include "LISTE.h"
-
+/* =========================================================
+  MAIN LISTE:graphe
+   ========================================================= */
 typedef struct {
-    int nombre_articles;//V
+    int V; //lg de la liste article
     ELEMENT *articles;
-    LISTE *adjacence;
-  //degree in mich mawjouda
-} grapheReseau;
+    LISTE   *adjList;
+    LISTE   *citants;      // le contraire du  adjliste
+    int     *degre_in;    //degree in =lg de les liste citants   je essayer le plus possible " de respecter la memes structure dans lennonce
+} structuregraphe,*grapheReseau;
 
+
+typedef struct{
+LISTE *citants;
+}structurecitant;*CITERS
 
 grapheReseau createGraph(int V);
 void chargerGraph(grapheReseau *g, const char *filename);

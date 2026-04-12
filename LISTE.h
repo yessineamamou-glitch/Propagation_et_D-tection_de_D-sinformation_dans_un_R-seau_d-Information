@@ -28,16 +28,7 @@ typedef struct {
     NOEUD tete;
     int lg;
 } laStruct, *LISTE;
-/* =========================================================
-  MAIN LISTE:graphe
-   ========================================================= */
-typedef struct {
-    int V; //lg de la liste article
-    ELEMENT *articles;
-    LISTE   *adjList;
-    LISTE   *citants;      // le contraire du  adjliste
-    int     *degre_in;    //degree in =lg de les liste citants   je essayer le plus possible " de respecter la memes structure dans lennonce
-} structuregraphe,*grapheReseau;
+
 /* =========================================================
    LISTE DES ELEMENTS (aritcle)  mawjouda deja fel graphe.h
    ========================================================= */
@@ -61,13 +52,12 @@ Citation_LISTE cit_listeCopier(Citation_LISTE L);
 /* =========================================================
    PROTOTYPES: MAIN LIST
    ========================================================= */
-LISTE main_listeCreer(void);
-void main_listeDetruire(LISTE L);
-int main_estVide(LISTE L);
-int main_listeTaille(LISTE L);
-ELEMENT main_recuperer(LISTE L, int pos);
-int main_inserer(LISTE L, ELEMENT e, Citation_LISTE citations, int pos);
-int main_supprimer(LISTE L, int pos);
-void main_listeAfficher(LISTE L);
-LISTE main_listeCopier(LISTE L);
+LISTE    listeCreer();
+void     listeDetruire(LISTE L);
+int      inserer(LISTE L, ELEMENT e, int pos);
+int      supprimer(LISTE L, int pos);
+ELEMENT  recuperer(LISTE L, int pos);
+void     listeAfficher(LISTE L);
+int      listeTaille(LISTE L);
+int      estVide(LISTE L);
 #endif
