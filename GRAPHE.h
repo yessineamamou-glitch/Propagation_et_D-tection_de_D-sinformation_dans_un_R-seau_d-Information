@@ -2,21 +2,6 @@
 #define GRAPHE_H
 
 #include "LISTE.h"
-/* =========================================================
-  MAIN LISTE:graphe
-   ========================================================= */
-typedef struct {
-    int V; //lg de la liste article
-    ELEMENT *articles;
-    LISTE   *adjList;
-    LISTE   *citants;      // le contraire du  adjliste
-    int     *degre_in;    //degree in =lg de les liste citants   je essayer le plus possible " de respecter la memes structure dans lennonce
-} structuregraphe,*grapheReseau;
-
-
-typedef struct{
-LISTE *citants;
-}structurecitant;*CITERS
 
 grapheReseau createGraph(int V);
 void chargerGraph(grapheReseau *g, const char *filename);
@@ -31,7 +16,9 @@ void articlesCitants(grapheReseau *g, int idDest);
 void sourcesOriginales(grapheReseau *g);
 void articlesIsoles(grapheReseau *g);
 ELEMENT articlePlusCite(grapheReseau *g);
+int comparerDates(ELEMENT art1, ELEMENT art2);
 void trierParDate(grapheReseau *g);
+void premierCitant(grapheReseau *g_ptr, int idDest);
 void chainerPropagation(grapheReseau *g, int idSrc);
 void simulerPropagation(grapheReseau *g, int idSrc);
 void analyserReseau(grapheReseau *g);

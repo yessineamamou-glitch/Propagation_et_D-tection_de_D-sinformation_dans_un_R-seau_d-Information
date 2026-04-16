@@ -2,25 +2,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ELTARTICLE.h"
-//idArticle, titre, source, score, jour, mois, annee, heure, minute
+
 ELEMENT elementCreer(ELEMENT e) {
-    ELEMENT e_copie = (ELEMENT)malloc(sizeof(articleStruct));
-    if (!e_copie) {
-        printf("\nErreur d'allocation ELEMENT");
+    ELEMENT nouveau = (ELEMENT)malloc(sizeof(articleStruct));
+    if (nouveau != NULL && e != NULL) {
+        elementCopier(&nouveau, e);
     }
-    else{
-        e_copie->id = e->id;
-        strcpy(e_copie->titre, e->titre);
-        strcpy(e_copie->source, e->source);
-        e_copie->score_fiabilite = e->score_fiabilite;
-        e_copie->jour = e->jour;
-        e_copie->mois = e->mois;
-        e_copie->annee = e->annee;
-        e_copie->heure = e->heure;
-        e_copie->minute = e->minute;
-    }
-    return e;
+    return nouveau;
 }
+
+void elementCopier(ELEMENT *e1, ELEMENT e2) {
+    (*e1)->id = e2->id;
+    strcpy((*e1)->titre, e2->titre);
+    strcpy((*e1)->source, e2->source);
+    (*e1)->score_fiabilite = e2->score_fiabilite;
+    (*e1)->jour = e2->jour;
+    (*e1)->mois = e2->mois;
+    (*e1)->annee = e2->annee;
+    (*e1)->heure = e2->heure;
+    (*e1)->minute = e2->minute;
+}
+
 
 void elementDetruire(ELEMENT e) {
     if (e != NULL) {
@@ -31,9 +33,8 @@ void elementDetruire(ELEMENT e) {
 void elementAffecter(ELEMENT *e1, ELEMENT e2) {
     *e1 = e2;
 }
-
 void elementLire(ELEMENT *e) {
-    *e = elementCreer();
+    if (*e == NULL) *e = elementCreer(ELEMENT_VIDE);
     printf("ID : "); scanf("%d", &((*e)->id));
     printf("Titre : "); scanf("%s", (*e)->titre);
     printf("Source : "); scanf("%s", (*e)->source);
@@ -44,26 +45,8 @@ void elementLire(ELEMENT *e) {
     scanf("%d %d", &((*e)->heure), &((*e)->minute));
 }
 
-ELEMENT elementCopier(ELEMENT e) {
-    ELEMENT e_copie = elementCreer();
-    if (e_copie != NULL && e != NULL) {
-        e_copie->id = e->id;
-        strcpy(e_copie->titre, e->titre);
-        strcpy(e_copie->source, e->source);
-        e_copie->score_fiabilite = e->score_fiabilite;
-        e_copie->jour = e->jour;
-        e_copie->mois = e->mois;
-        e_copie->annee = e->annee;
-        e_copie->heure = e->heure;
-        e_copie->minute = e->minute;
-    }
-    return e_copie;
-}
-
 int elementComparer(ELEMENT e1, ELEMENT e2) {
-    if (e1->id < e2->id) return -1;
-    if (e1->id > e2->id) return 1;
-    return 0;
+    return (e1->id - e2->id);
 }
 
 void elementAfficher(ELEMENT e) {

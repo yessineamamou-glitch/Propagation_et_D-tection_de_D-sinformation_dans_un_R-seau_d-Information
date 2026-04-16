@@ -15,11 +15,12 @@ typedef struct {
 
 #define ELEMENT_VIDE NULL
 
-ELEMENT elementCreer(void);
+
+ELEMENT elementCreer(ELEMENT e);
 void elementDetruire(ELEMENT e);
 void elementLire(ELEMENT *e);
 void elementAffecter(ELEMENT *e1, ELEMENT e2);
-ELEMENT elementCopier(ELEMENT e);
+void elementCopier(ELEMENT *e1, ELEMENT e2);
 int elementComparer(ELEMENT e1, ELEMENT e2);
 void elementAfficher(ELEMENT e);
 

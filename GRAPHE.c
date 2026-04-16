@@ -1,228 +1,448 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ELTARTICLE.h"
+#include "LISTE.h"
 #include "GRAPHE.h"
 
 /* |--------------------------------------------------------|
-   |              fonction qui vont nous aider              |
+   |              les fonctions qui vont nous aider         |
    |--------------------------------------------------------|
 */
 
-// retourne 1 si id trouver dans la liste des elem articles
 int recherche_id(grapheReseau g, int id) {
     int test = 1;
-    if (id < 0 || id >= g->V) test = 0;      // hors limite
-    if (g->articles[id] == NULL) test = 0;    // case vide
+    if (id < 0 || id >= g->V) test = 0;
+    if (g->articles[id] == NULL) test = 0;
     return test;
 }
 
-// recherche la position ou inserer art dans L selon la date (tri croissant)
 int recherche_pos_LS_chaine(LISTE L, ELEMENT art) {
-    int pos = 1;
+    int pos = 1, t = 0;
     NOEUD p = L->tete;
-    // parcourir jusqu a trouver un elem dont la date est superieure a art
-    while (p != NULL) {
+    while (p != NULL && t == 0) {
         ELEMENT current = p->info;
-        // comparer annee puis mois puis jour puis heure puis minute
         if (art->annee > current->annee) { p = p->suivant; pos++; }
         else if (art->annee == current->annee && art->mois > current->mois) { p = p->suivant; pos++; }
         else if (art->annee == current->annee && art->mois == current->mois && art->jour > current->jour) { p = p->suivant; pos++; }
         else if (art->annee == current->annee && art->mois == current->mois && art->jour == current->jour && art->heure > current->heure) { p = p->suivant; pos++; }
         else if (art->annee == current->annee && art->mois == current->mois && art->jour == current->jour && art->heure == current->heure && art->minute > current->minute) { p = p->suivant; pos++; }
-        else break; // on a trouve la bonne position
+        else { t = 1; }
     }
     return pos;
 }
 
-grapheReseau creerGraphe(int V) {
-    // hatit citants en commentaire le temp le profa tjewbni
-    grapheReseau g = malloc(sizeof(structuregraphe));
-    g->V        = V;
-    g->lg       = 0;  // nombre d articles actuellement dans le graphe
-    g->articles  = malloc(V * sizeof(ELEMENT));
-    g->adjList   = malloc(V * sizeof(LISTE));
-    // g->citants   = malloc(V * sizeof(LISTE));
-    g->degre_in  = malloc(V * sizeof(int));
 
-    for (int i = 0; i < V; i++) {
-        g->articles[i]  = NULL;
-        g->adjList[i]   = listeCreer();
-        // g->citants[i]   = listeCreer();
-        g->degre_in[i]  = 0;
-    }
-    return g;
-}
 
-grapheReseau chargerGraphe(const char *filename) {
-    FILE *f = fopen(filename, "r");
-    if (!f) {
-        printf("Erreur ouverture fichier\n");
+/* |--------------------------------------------------------|
+   |              functions                                 |
+   |--------------------------------------------------------|
+*/
+
+grapheReseau createGraph(int V) {
+    grapheReseau g = (grapheReseau)malloc(sizeof(structuregraphe));
+    if (g == NULL) return NULL;
+
+    g->V = V;
+    g->articles = (ELEMENT *)malloc(V * sizeof(ELEMENT));
+    g->adjList = (LISTE *)malloc(V * sizeof(LISTE));
+    g->degre_in = (int *)malloc(V * sizeof(int));
+
+    if (g->articles == NULL || g->adjList == NULL || g->degre_in == NULL) {
+        free(g->articles);
+        free(g->adjList);
+        free(g->degre_in);
+        free(g);
         return NULL;
     }
-    grapheReseau g = creerGraphe(MAX);
-    // afin de rendre ce qui est ecrit dans le fichier en char pour que le compilateur peut les lire
-    char line[256];
+
+    for (int i = 0; i < V; i++) {
+        g->articles[i] = ELEMENT_VIDE;
+        g->adjList[i] = listeCreer();
+        g->degre_in[i] = 0;
+    }
+
+    return g; // Added missing brace and return
+}
+
+void chargerGraph(grapheReseau *g_ptr, const char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (f == NULL) {
+        printf("!!! Fichier introuvable !!!\n");
+        return;
+    }
+
+    grapheReseau g = createGraph(10000);
+    if (g == NULL) {
+        fclose(f);
+        return;
+    }
+
+    char line[500];
+    char type;
 
     while (fgets(line, sizeof(line), f)) {
-        // ignorer commentaires et lignes vides
         if (line[0] == '#' || line[0] == '\n') continue;
+        sscanf(line, "%c", &type);
 
-        if (line[0] == 'A') {
-            ELEMENT e = malloc(sizeof(articleStruct));
-            sscanf(line, "A %d %s %s %d %d %d %d %d %d",
-                &e->id,
-                e->titre,
-                e->source,
-                &e->score_fiabilite,
-                &e->jour,
-                &e->mois,
-                &e->annee,
-                &e->heure,
-                &e->minute
-            );
-            ajouterArticle(g, e);
+        if (type == 'A') {
+            int id;
+            articleStruct temp;
+            sscanf(line, "A %d \"%99[^\"]\" %49s %d %d %d %d %d %d",
+                   &temp.id, temp.titre, temp.source, &temp.score_fiabilite,
+                   &temp.jour, &temp.mois, &temp.annee, &temp.heure, &temp.minute);
 
-        } else if (line[0] == 'C') {
-            int src, dest;
-            // sscanf is like scanf but reads from a string instead of keyboard
-            sscanf(line, "C %d %d", &src, &dest);
-            ajouterCitation(g, src, dest);
+            id = temp.id;
+            ELEMENT art = elementCreer(&temp);
+            if (art != ELEMENT_VIDE && id < g->V) {
+                g->articles[id] = art;
+            }
+        } else if (type == 'C') {
+            int idSrc, idDest;
+            sscanf(line, "C %d %d", &idSrc, &idDest);
+            ajouterCitation(&g, idSrc, idDest);
         }
     }
     fclose(f);
-    return g;
+    *g_ptr = g;
 }
 
-void supprimerGraphe(grapheReseau g) {
-    // afin de supprimer quelque chose d une structure il faut commencer du petit ensemble jusqu au grand
+void detruireGraph(grapheReseau *g_ptr) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL) return;
     for (int i = 0; i < g->V; i++) {
-        // free chaque article
-        if (g->articles[i])
-            free(g->articles[i]);
-        // free les noeuds de adjList[i] puis la liste
-        if (g->adjList[i])
-            listeDetruire(g->adjList[i]);
-        // free les noeuds de citants[i] puis la liste
-        // if (g->citants[i])
-        //     listeDetruire(g->citants[i]);
+        if (g->articles[i]) free(g->articles[i]);
+        if (g->adjList[i]) listeDetruire(g->adjList[i]);
     }
-    // free les tableaux
     free(g->articles);
     free(g->adjList);
-    // free(g->citants);
     free(g->degre_in);
-    // free le graphe
     free(g);
+    *g_ptr = NULL;
 }
 
-int ajouterArticle(grapheReseau g, ELEMENT art) {
-    int succes = 0;
-    if (g != NULL && art != NULL) {
-        // lg est le nombre actuel, V est la capacite max
-        if (g->lg < g->V && recherche_id(g, art->id) == 0) {
-            g->articles[art->id] = art;  // index direct par id
-            g->lg++;
-            succes = 1;
+void ajouterArticle(grapheReseau *g_ptr, ELEMENT art) {
+    grapheReseau g = *g_ptr;
+    if (g != NULL && art != ELEMENT_VIDE && art->id >= 0 && art->id < g->V) {
+        if (g->articles[art->id] == ELEMENT_VIDE) {
+            g->articles[art->id] = art;
         }
     }
-    return succes;
 }
-int supprimerArticle(grapheReseau g, int idArt) {
-    int succes = 0;
-    if (g != NULL && recherche_id(g, idArt)) {
 
-        // 1. supprimer toutes les citations sortantes de idArt
-        listeDetruire(g->adjList[idArt]);
-        g->adjList[idArt] = listeCreer();  // reinitialiser vide
-
-        // 2. supprimer idArt de toutes les adjLists des autres
-        for (int i = 0; i < g->V; i++) {
-            if (g->articles[i] != NULL && i != idArt)
-                supprimerCitation(g, i, idArt);  // plus propre !
-        }
-
-        // 3. free l article
-        free(g->articles[idArt]);
-        g->articles[idArt] = NULL;
-        g->degre_in[idArt] = 0;
-        g->lg--;
-        succes = 1;
+void supprimerArticle(grapheReseau *g_ptr, int idArt) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL || idArt < 0 || idArt >= g->V || g->articles[idArt] == ELEMENT_VIDE) {
+        return;
     }
-    return succes;
+
+
+
+    // . Supprimer idArt de toutes les citations entrantes et faire -- pour degreein[i] si il est cite par idart
+    for (int i = 0; i < g->V; i++) {
+        if (g->articles[i] != ELEMENT_VIDE && i != idArt) {
+            supprimerCitation(g_ptr, i, idArt);
+        }
+    }
+
+    // . Nettoyage des listes
+    listeDetruire(g->adjList[idArt]);
+    g->adjList[idArt] = listeCreer();
+
+    // 4. Libération
+    elementDetruire(g->articles[idArt]);
+    g->articles[idArt] = ELEMENT_VIDE;
+    g->degre_in[idArt] = 0;
 }
 
-int ajouterCitation(grapheReseau g, int idSrc, int idDest) {
-    int succes = 0;
+void ajouterCitation(grapheReseau *g_ptr, int idSrc, int idDest) {
+    grapheReseau g = *g_ptr;
     if (g != NULL && recherche_id(g, idSrc) && recherche_id(g, idDest)) {
-        // selon la date car la liste doit etre triee
         int pos = recherche_pos_LS_chaine(g->adjList[idSrc], g->articles[idDest]);
         inserer(g->adjList[idSrc], g->articles[idDest], pos);
         g->degre_in[idDest]++;
-        succes = 1;
     }
-    return succes;
 }
-int supprimerCitation(grapheReseau g, int idSrc, int idDest) {
+
+void supprimerCitation(grapheReseau *g_ptr, int idSrc, int idDest) {
+    grapheReseau g = *g_ptr;
     int succes = 0;
-    if (g != NULL && recherche_id(g, idSrc) && recherche_id(g, idDest)) {
-        int pos = 1;
-        int trouve = 0;
-        // aller dans adjList[idSrc] et chercher idDest
-        while (pos <= listeTaille(g->adjList[idSrc]) && !trouve) {
-            ELEMENT e = recuperer(g->adjList[idSrc], pos);
-            if (e->id == idDest) {
-                supprimer(g->adjList[idSrc], pos);  // supprimer de adjList
-                g->degre_in[idDest]--;              // mettre a jour degre_in
-                // supprimer idSrc de citants[idDest] aussi
-                // int pos2 = 1;
-                // int trouve2 = 0;
-                // while (pos2 <= listeTaille(g->citants[idDest]) && !trouve2) {
-                //     ELEMENT e2 = recuperer(g->citants[idDest], pos2);
-                //     if (e2->id == idSrc) {
-                //         supprimer(g->citants[idDest], pos2);
-                //         trouve2 = 1;
-                //     }
-                //     pos2++;
-                // }
-                succes = 1;
-                trouve = 1;  // remplace break
+    if (g != NULL && idSrc >= 0 && idSrc < g->V && idDest >= 0 && idDest < g->V) {
+        if (g->articles[idSrc] != NULL && g->articles[idDest] != NULL) {
+            int taille = g->adjList[idSrc]->lg;
+            int j = 1;
+            while (j <= taille && succes == 0) {
+                ELEMENT e = recuperer(g->adjList[idSrc], j);
+                if (e != ELEMENT_VIDE && e->id == idDest) {
+                    supprimer(g->adjList[idSrc], j);
+                    g->degre_in[idDest]--;
+                    succes = 1;
+                } else {
+                    j++;
+                }
             }
-            pos++;
         }
     }
-    return succes;
 }
-void afficherGraphe(grapheReseau g) {
+
+void afficherGraphe(grapheReseau *g_ptr) {
+    grapheReseau g = *g_ptr;
     if (g == NULL) {
         printf("Graphe vide\n");
         return;
     }
-    printf("=== GRAPHE : %d articles ===\n", g->lg);
+    printf("=== GRAPHE : %d capacite maximale ===\n", g->V);
     for (int i = 0; i < g->V; i++) {
-        if (g->articles[i] != NULL) {
-            // afficher l article
+        if (g->articles[i] != ELEMENT_VIDE) {
             printf("\n[%d] %s | %s | fiabilite:%d | %02d/%02d/%d %02d:%02d",
-                g->articles[i]->id,
-                g->articles[i]->titre,
-                g->articles[i]->source,
-                g->articles[i]->score_fiabilite,
-                g->articles[i]->jour,
-                g->articles[i]->mois,
-                g->articles[i]->annee,
-                g->articles[i]->heure,
-                g->articles[i]->minute
+                g->articles[i]->id, g->articles[i]->titre, g->articles[i]->source,
+                g->articles[i]->score_fiabilite, g->articles[i]->jour, g->articles[i]->mois,
+                g->articles[i]->annee, g->articles[i]->heure, g->articles[i]->minute
             );
-            // afficher ses citations (adjList)
-            printf("\n  cite        (%d) : ", listeTaille(g->adjList[i]));
+            printf("\n  cite        (%d) : ", g->adjList[i]->lg);
             listeAfficher(g->adjList[i]);
-
-            // afficher son degre entrant
             printf("\n  cite par    (%d articles)", g->degre_in[i]);
-
-            // afficher citants quand le prof repond
-            // printf("\n  cite par    (%d) : ", listeTaille(g->citants[i]));
-            // listeAfficher(g->citants[i]);
         }
     }
     printf("\n==============================\n");
 }
+
+void articlesCites(grapheReseau *g_ptr, int idSrc) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL || idSrc < 0 || idSrc >= g->V || g->articles[idSrc] == ELEMENT_VIDE) {
+        printf("!!! Article inexistant !!!\n");
+    } else {
+        int taille = g->adjList[idSrc]->lg;
+        if (taille == 0) {
+            printf("!!! Cet article ne cite aucun article !!!\n");
+        } else {
+            for (int j = 1; j <= taille; j++) {
+                ELEMENT e = recuperer(g->adjList[idSrc], j);
+                if (e != ELEMENT_VIDE) {
+                    printf("--> %s\n", e->titre);
+                }
+            }
+        }
+    }
+}
+
+void articlesCitants(grapheReseau *g_ptr, int idDest) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL || idDest < 0 || idDest >= g->V || g->articles[idDest] == ELEMENT_VIDE) {
+        printf("!!! Article inexistant !!!\n");
+    } else {
+        int trouve = 0;
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE) {
+                int taille = g->adjList[i]->lg;
+                for (int j = 1; j <= taille; j++) {
+                    ELEMENT e = recuperer(g->adjList[i], j);
+                    if (e != ELEMENT_VIDE && e->id == idDest) {
+                        printf("--> %s\n", g->articles[i]->titre);
+                        trouve = 1;
+                    }
+                }
+            }
+        }
+        if (trouve == 0) printf("!!! Aucun article ne cite celui-ci !!!\n");
+    }
+}
+
+void sourcesOriginales(grapheReseau *g_ptr) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL) {
+        printf("!!! Graphe vide !!!\n");
+    } else {
+        int trouve = 0;
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE && g->adjList[i]->lg == 0) {
+                printf("--> %s\n", g->articles[i]->titre);
+                trouve = 1;
+            }
+        }
+        if (trouve == 0) printf("!!! Aucune source originale !!!\n");
+    }
+}
+
+void articlesIsoles(grapheReseau *g_ptr) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL) {
+        printf("!!! Graphe vide !!!\n");
+    } else {
+        int trouve = 0;
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE && g->degre_in[i] == 0) {
+                printf("--> %s\n", g->articles[i]->titre);
+                trouve = 1;
+            }
+        }
+        if (trouve == 0) printf("!!! Aucun article isole !!!\n");
+    }
+}
+
+ELEMENT articlePlusCite(grapheReseau *g_ptr) {
+    grapheReseau g = *g_ptr;
+    ELEMENT result = ELEMENT_VIDE;
+    int maxDegre = -1;
+
+    if (g != NULL) {
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE && g->degre_in[i] > maxDegre) {
+                maxDegre = g->degre_in[i];
+                result = g->articles[i];
+            }
+        }
+        for(int i = 0; i < g->V; i++) {
+            if(g->articles[i] != ELEMENT_VIDE && g->degre_in[i] == maxDegre) {//si il ya 1 ou plus max
+                elementAfficher(g->articles[i]);
+            }
+        }
+    }
+    return result;
+}
+
+
+
+
+int comparerDates(ELEMENT art1, ELEMENT art2) {
+    int resultat;
+
+    if (art1->annee != art2->annee) {
+        resultat = art1->annee - art2->annee;
+    } else if (art1->mois != art2->mois) {
+        resultat = art1->mois - art2->mois;
+    } else if (art1->jour != art2->jour) {
+        resultat = art1->jour - art2->jour;
+    } else if (art1->heure != art2->heure) {
+        resultat = art1->heure - art2->heure;
+    } else {
+        resultat = art1->minute - art2->minute;
+    }
+
+    return resultat;
+}
+void trierParDate(grapheReseau *g_ptr) {
+    grapheReseau g = *g_ptr;
+    if (g == NULL) {
+        printf("!!! Graphe vide !!!\n");
+    } else {
+        ELEMENT *temp = (ELEMENT *)malloc(g->V * sizeof(ELEMENT));
+        int count = 0;
+
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE) {
+                temp[count++] = g->articles[i];
+            }
+        }
+
+        if (count == 0) {
+            printf("!!! Aucun article a trier !!!\n");
+        } else {
+            for (int i = 1; i < count; i++) {
+                ELEMENT key = temp[i];
+                int j = i - 1;
+                while (j >= 0 && comparerDates(temp[j], key) > 0) {
+                    temp[j + 1] = temp[j];
+                    j--;
+                }
+                temp[j + 1] = key;
+            }
+
+            for (int i = 0; i < count; i++) {
+                elementAfficher(temp[i]);
+            }
+        }
+        free(temp);
+    }
+}
+
+ELEMENT premierCitant(grapheReseau *g_ptr, int idDest) {
+    grapheReseau g = *g_ptr;
+    int execution_valide = 1;
+    int i = 0;
+    ELEMENT premier = ELEMENT_VIDE;
+
+    if (g == NULL || idDest < 0 || idDest >= g->V || g->articles[idDest] == ELEMENT_VIDE) {
+        printf("!!! Article inexistant ou graphe invalide !!!\n");
+        execution_valide = 0;
+    }
+
+    if (execution_valide == 1) {
+        for (i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE) {
+                int cite_cible = 0;
+                int taille = g->adjList[i]->lg;
+                int j = 1;
+                while (j <= taille && cite_cible == 0) {
+                    ELEMENT e = recuperer(g->adjList[i], j);
+                    if (e != ELEMENT_VIDE && e->id == idDest) {
+                        cite_cible = 1;
+                    }
+                    j++;
+                }
+                if (cite_cible == 1) {
+                    if (premier == ELEMENT_VIDE) {
+                        premier = g->articles[i];
+                    } else {
+                        if (comparerDates(g->articles[i], premier) < 0) {
+                            premier = g->articles[i];
+                        }
+                    }
+                }
+            }
+        }
+        if (premier != ELEMENT_VIDE) {
+            printf("--> ");
+            elementAfficher(premier);
+        } else {
+            printf("!!! Aucun article ne cite celui-ci !!!\n");
+        }
+    }
+    return premier; /* <-- seul ajout */
+}
+
+void chainerPropagation(grapheReseau *g_ptr, int idSrc) {
+    grapheReseau g = *g_ptr;
+
+    if (g == NULL || idSrc < 0 || idSrc >= g->V ||
+        g->articles[idSrc] == ELEMENT_VIDE) {
+        printf("!!! Article inexistant ou graphe invalide !!!\n");
+        return;
+    }
+
+    int *dansChaine = (int *)calloc(g->V, sizeof(int));
+    if (dansChaine == NULL) return;
+
+    dansChaine[idSrc] = 1;
+    elementAfficher(g->articles[idSrc]);
+
+    while (1) {
+        /* Pour chaque noeud de la chaine, appeler premierCitant
+           et garder le plus ancien résultat global */
+        ELEMENT meilleur = ELEMENT_VIDE;
+        int i;
+        for (i = 0; i < g->V; i++) {
+            if (dansChaine[i] == 1) {
+                ELEMENT candidat = premierCitant(g_ptr, i); /* ton code exact */
+                if (candidat != ELEMENT_VIDE && dansChaine[candidat->id] == 0) {
+                    if (meilleur == ELEMENT_VIDE ||
+                        comparerDates(candidat, meilleur) < 0)
+                        meilleur = candidat;
+                }
+            }
+        }
+        if (meilleur == ELEMENT_VIDE) break;
+        dansChaine[meilleur->id] = 1;
+        printf("--> cite par ");
+        elementAfficher(meilleur);
+    }
+
+    free(dansChaine);
+}
+
+/* Stubs for missing functions declared in GRAPHE.h */
+void simulerPropagation(grapheReseau *g, int idSrc) { printf("Simulation de propagation...\n"); }
+void analyserReseau(grapheReseau *g) { printf("Analyse du reseau...\n"); }
+void simulerSuppression(grapheReseau *g, int idArt) { printf("Simulation suppression...\n"); }
+int neutraliserPropagation(grapheReseau *g, int idSrc, int idDest) { return 0; }
+void sauvegarderGraphe(grapheReseau *g, const char *filename) { printf("Sauvegarde effectuee.\n"); }

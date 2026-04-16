@@ -2,246 +2,174 @@
 #include <stdlib.h>
 #include "LISTE.h"
 
+
+
+
 /* =========================================================
-   IMPLEMENTATION: CITATION LIST
+   IMPLEMENTATION: contigue
    ========================================================= */
 
-static CitationNoeudPtr cit_noeudCreer(int id) {
-    CitationNoeudPtr n = (CitationNoeudPtr)malloc(sizeof(CitationListeNoeud));
-    if (n == NULL) {
-        printf("\nPlus d'espace memoire pour la citation.");
+
+int articlesEstVide(grapheReseau g) {
+    return (g->V == 0);
+}
+
+int articlesInserer(grapheReseau g, ELEMENT e, int pos) {
+    int i;
+    if ((pos < 1) || (pos > g->V + 1)) {
+        printf("\nPosition invalide");
+        return 0;
+    }
+    for (i = g->V; i >= pos; i--) {
+        elementAffecter(&g->articles[i + 1], g->articles[i]);
+    }
+    elementAffecter(&g->articles[pos], e);
+    (g->V)++;
+    return 1;
+}
+
+int articlesSupprimer(grapheReseau g, int pos) {
+    int i;
+    if (articlesEstVide(g)) {
+        printf("\nListe vide");
+        return 0;
+    }
+    if ((pos < 1) || (pos > g->V)) {
+        printf("\nPosition invalide");
+        return 0;
+    }
+    elementDetruire(g->articles[pos]);
+    for (i = pos; i < g->V; i++) {
+        elementAffecter(&g->articles[i], g->articles[i + 1]);
+    }
+    (g->V)--;
+    return 1;
+}
+
+void articlesAfficher(grapheReseau g) {
+    int i;
+    for (i = 1; i <= g->V; i++) {
+        elementAfficher(g->articles[i]);
+    }
+}
+
+ELEMENT recupererArticle(grapheReseau g, int pos) {
+    if ((pos < 1) || (pos > g->V)) {
+        return NULL;
+    }
+    return g->articles[pos];
+}
+
+/* =========================================================
+   IMPLEMENTATION: simplement chaine
+   ========================================================= */
+
+
+NOEUD noeudCreer(ELEMENT e) {
+    NOEUD n = (NOEUD)malloc(sizeof(structNoeud));
+    if(!n) {
+        printf("\nPlus d'espace");
     } else {
-        n->id_cite = id;
+        elementAffecter(&n->info, e);
         n->suivant = NULL;
     }
     return n;
 }
 
-Citation_LISTE cit_listeCreer(void) {
-    Citation_LISTE L = (Citation_LISTE)malloc(sizeof(CitationListeStruct));
-    if (L != NULL) {
-        L->tete = NULL;
+void noeudDetruire(NOEUD n) {
+    elementDetruire(n->info);
+    free(n);
+}
+
+/* --- Opérations sur la Liste --- */
+
+LISTE listeCreer(void) {
+    LISTE L = (LISTE)malloc(sizeof(laStruct));
+    if (L) {
         L->lg = 0;
+        L->tete = NULL;
     }
     return L;
 }
 
-int cit_estVide(Citation_LISTE L) {
+int estVide(LISTE L) {
     return (L->lg == 0);
 }
 
-int cit_listeTaille(Citation_LISTE L) {
-    return L->lg;
-}
-
-int cit_inserer(Citation_LISTE L, int id, int pos) {
-    int success = 0;
-    if (L != NULL && pos >= 1 && pos <= L->lg + 1) {
-        CitationNoeudPtr n = cit_noeudCreer(id);
-        if (n != NULL) {
-            if (pos == 1) {
-                n->suivant = L->tete;
-                L->tete = n;
-            } else {
-                CitationNoeudPtr p = L->tete;
-                for (int i = 1; i < pos - 1; i++) {
-                    p = p->suivant;
-                }
-                n->suivant = p->suivant;
-                p->suivant = n;
-            }
-            L->lg++;
-            success = 1;
-        }
+int estSaturee(LISTE L) {
+    NOEUD temp = (NOEUD)malloc(sizeof(structNoeud));
+    if(temp != NULL) {
+        free(temp);
+        return 0; // Mémoire non saturée
     }
-    return success;
+    return 1;
 }
 
-int cit_supprimer(Citation_LISTE L, int pos) {
-    int success = 0;
-    if (L != NULL && !cit_estVide(L) && pos >= 1 && pos <= L->lg) {
-        CitationNoeudPtr q = NULL;
-        if (pos == 1) {
-            q = L->tete;
-            L->tete = L->tete->suivant;
-        } else {
-            CitationNoeudPtr p = L->tete;
-            for (int i = 1; i < pos - 1; i++) {
-                p = p->suivant;
-            }
-            q = p->suivant;
-            p->suivant = q->suivant;
-        }
-        free(q);
-        L->lg--;
-        success = 1;
-    }
-    return success;
-}
+int inserer(LISTE L, ELEMENT e, int pos) {
+    if (estSaturee(L)) return 0;
+    if (pos < 1 || pos > L->lg + 1) return 0;
 
-void cit_listeAfficher(Citation_LISTE L) {
-    if (L != NULL) {
-        CitationNoeudPtr courant = L->tete;
-        while (courant != NULL) {
-            printf("%d ", courant->id_cite);
-            courant = courant->suivant;
-        }
-        printf("\n");
-    }
-}
-
-void cit_listeDetruire(Citation_LISTE L) {
-    if (L != NULL) {
-        while (!cit_estVide(L)) {
-            cit_supprimer(L, 1);
-        }
-        free(L);
-    }
-}
-
-Citation_LISTE cit_listeCopier(Citation_LISTE L) {
-    Citation_LISTE nL = cit_listeCreer();
-    if (L != NULL && nL != NULL) {
-        CitationNoeudPtr courant = L->tete;
-        int pos = 1;
-        while (courant != NULL) {
-            cit_inserer(nL, courant->id_cite, pos);
-            courant = courant->suivant;
-            pos++;
-        }
-    }
-    return nL;
-}
-
-/* =========================================================
-   IMPLEMENTATION: MAIN LIST
-   ========================================================= */
-
-static MainNoeudPtr main_noeudCreer(ELEMENT e, Citation_LISTE citations) {
-    MainNoeudPtr n = (MainNoeudPtr)malloc(sizeof(MainListeNoeud));
-    if (n == NULL) {
-        printf("\nPlus d'espace memoire pour l'element principal.");
+    NOEUD n = noeudCreer(e);
+    if (pos == 1) {
+        n->suivant = L->tete;
+        L->tete = n;
     } else {
-        n->info = e;
-        n->citations = citations;
-        n->suivant = NULL;
-    }
-    return n;
-}
-
-LISTE main_listeCreer(void) {
-    LISTE L = (LISTE)malloc(sizeof(MainListeStruct));
-    if (L != NULL) {
-        L->tete = NULL;
-        L->lg = 0;
-    }
-    return L;
-}
-
-int main_estVide(LISTE L) {
-    return (L == NULL || L->lg == 0);
-}
-
-int main_listeTaille(LISTE L) {
-    int taille = 0;
-    if (L != NULL) {
-        taille = L->lg;
-    }
-    return taille;
-}
-
-int main_inserer(LISTE L, ELEMENT e, Citation_LISTE citations, int pos) {
-    int success = 0;
-    if (L != NULL && pos >= 1 && pos <= L->lg + 1) {
-        MainNoeudPtr n = main_noeudCreer(e, citations);
-        if (n != NULL) {
-            if (pos == 1) {
-                n->suivant = L->tete;
-                L->tete = n;
-            } else {
-                MainNoeudPtr p = L->tete;
-                for (int i = 1; i < pos - 1; i++) {
-                    p = p->suivant;
-                }
-                n->suivant = p->suivant;
-                p->suivant = n;
-            }
-            L->lg++;
-            success = 1;
-        }
-    }
-    return success;
-}
-//                                                                        faute fi supp maamltch noeud detrui w lezem maaha cit detrue
-int main_supprimer(LISTE L, int pos) {
-    int success = 0;
-    if (L != NULL && !main_estVide(L) && pos >= 1 && pos <= L->lg) {
-        MainNoeudPtr q = NULL;
-        if (pos == 1) {
-            q = L->tete;
-            L->tete = L->tete->suivant;
-        } else {
-            MainNoeudPtr p = L->tete;
-            for (int i = 1; i < pos - 1; i++) {
-                p = p->suivant;
-            }
-            q = p->suivant;
-            p->suivant = q->suivant;
-        }
-        // If you need to clean up citations during deletion, do it here
-        // cit_listeDetruire(q->citations);
-        free(q);
-        L->lg--;
-        success = 1;
-    }
-    return success;
-}
-
-ELEMENT main_recuperer(LISTE L, int pos) {
-    ELEMENT e = NULL;
-    if (L != NULL && pos >= 1 && pos <= L->lg) {
-        MainNoeudPtr courant = L->tete;
+        NOEUD p, q = L->tete;
         for (int i = 1; i < pos; i++) {
-            courant = courant->suivant;
+            p = q;
+            q = q->suivant;
         }
-        e = courant->info;
+        p->suivant = n;
+        n->suivant = q;
     }
-    return e;
+    L->lg++;
+    return 1;
 }
 
-LISTE main_listeCopier(LISTE L) {
-    LISTE nL = main_listeCreer();
-    if (L != NULL && nL != NULL) {
-        MainNoeudPtr courant = L->tete;
-        int pos = 1;
-        while (courant != NULL) {
-            ELEMENT eCopy = elementCopier(courant->info);
-            Citation_LISTE citCopy = cit_listeCopier(courant->citations);
-            main_inserer(nL, eCopy, citCopy, pos);
-            courant = courant->suivant;
-            pos++;
+int supprimer(LISTE L, int pos) {
+    if (estVide(L) || pos < 1 || pos > L->lg) return 0;
+
+    NOEUD p, q = L->tete;
+    if (pos == 1) {
+        L->tete = L->tete->suivant;
+    } else {
+        for (int i = 1; i < pos; i++) {
+            p = q;
+            q = q->suivant;
         }
+        p->suivant = q->suivant;
     }
-    return nL;
+    noeudDetruire(q);
+    L->lg--;
+    return 1;
 }
 
-void main_listeAfficher(LISTE L) {
-    if (L != NULL) {
-        MainNoeudPtr courant = L->tete;
-        while (courant != NULL) {
-            elementAfficher(courant->info);
-            printf(" Citations: ");
-            cit_listeAfficher(courant->citations);
-            courant = courant->suivant;
-        }
+ELEMENT recuperer(LISTE L, int pos) {
+    if (estVide(L) || pos < 1 || pos > L->lg) return elementCreer(ELEMENT_VIDE);
+
+    NOEUD p = L->tete;
+    for (int i = 1; i < pos; i++)
+        p = p->suivant;
+
+    ELEMENT elt = elementCreer(p->info);
+
+    return elt;
+}
+
+void listeAfficher(LISTE L) {
+    NOEUD p = L->tete;
+    while (p != NULL) {
+        elementAfficher(p->info);
+        p = p->suivant;
     }
 }
 
-void main_listeDetruire(LISTE L) {
-    if (L != NULL) {
-        while (!main_estVide(L)) {
-            main_supprimer(L, 1);
-        }
-        free(L);
+void listeDetruire(LISTE L) {
+    NOEUD q = L->tete;
+    while (q != NULL) {
+        NOEUD p = q;
+        q = q->suivant;
+        noeudDetruire(p);
     }
+    free(L);
 }

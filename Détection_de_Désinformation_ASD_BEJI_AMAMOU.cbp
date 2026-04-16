@@ -35,6 +35,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="ELTARTICLE.h" />
+		<Unit filename="FAKESDB.h" />
 		<Unit filename="GRAPHE.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -44,6 +45,9 @@
 		</Unit>
 		<Unit filename="LISTE.h" />
 		<Unit filename="donnees.txt" />
+		<Unit filename="fakesdb.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
