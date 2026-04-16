@@ -401,43 +401,149 @@ ELEMENT premierCitant(grapheReseau *g_ptr, int idDest) {
     return premier; /* <-- seul ajout */
 }
 
-void chainerPropagation(grapheReseau *g_ptr, int idSrc) {
+ELEMENT premierCitant(grapheReseau *g_ptr, int idDest) {
     grapheReseau g = *g_ptr;
+    int i = 0;
+    ELEMENT premier = ELEMENT_VIDE;
 
-    if (g == NULL || idSrc < 0 || idSrc >= g->V ||
-        g->articles[idSrc] == ELEMENT_VIDE) {
+    /* Verification de la validite de l'article cible */
+    if (g == NULL || idDest < 0 || idDest >= g->V ||
+        g->articles[idDest] == ELEMENT_VIDE) {
         printf("!!! Article inexistant ou graphe invalide !!!\n");
-        return;
+        return ELEMENT_VIDE;
     }
 
-    int *dansChaine = (int *)calloc(g->V, sizeof(int));
-    if (dansChaine == NULL) return;
+    /* Parcourir TOUS les articles du graphe */
+    for (i = 0; i < g->V; i++) {
 
-    dansChaine[idSrc] = 1;
-    elementAfficher(g->articles[idSrc]);
+        /* Ignorer les cases vides */
+        if (g->articles[i] != ELEMENT_VIDE) {
+            int cite_cible = 0;
+            int taille = g->adjList[i]->lg;
+            int j = 1;
 
-    while (1) {
-        /* Pour chaque noeud de la chaine, appeler premierCitant
-           et garder le plus ancien résultat global */
-        ELEMENT meilleur = ELEMENT_VIDE;
-        int i;
-        for (i = 0; i < g->V; i++) {
-            if (dansChaine[i] == 1) {
-                ELEMENT candidat = premierCitant(g_ptr, i); /* ton code exact */
-                if (candidat != ELEMENT_VIDE && dansChaine[candidat->id] == 0) {
-                    if (meilleur == ELEMENT_VIDE ||
-                        comparerDates(candidat, meilleur) < 0)
-                        meilleur = candidat;
+            /* Parcourir la liste des citations de l'article i */
+            /* On cherche si l'article i cite idDest */
+            while (j <= taille && cite_cible == 0) {
+                ELEMENT e = recuperer(g->adjList[i], j);
+                if (e != ELEMENT_VIDE && e->id == idDest) {
+                    cite_cible = 1; /* oui, l'article i cite idDest */
+                }
+                j++;
+            }
+
+            /* Si l'article i cite idDest, on le compare au meilleur actuel */
+            if (cite_cible == 1) {
+                if (premier == ELEMENT_VIDE) {
+                    /* Premier candidat trouve, on le garde */
+                    premier = g->articles[i];
+                } else {
+                    /* On garde le plus ancien des deux */
+                    if (comparerDates(g->articles[i], premier) < 0) {
+                        premier = g->articles[i];
+                    }
                 }
             }
         }
-        if (meilleur == ELEMENT_VIDE) break;
-        dansChaine[meilleur->id] = 1;
-        printf("--> cite par ");
-        elementAfficher(meilleur);
     }
 
-    free(dansChaine);
+    /* Affichage du resultat */
+    if (premier != ELEMENT_VIDE) {
+        printf("--> ");
+        elementAfficher(premier);
+    } else {
+        printf("!!! Aucun article ne cite celui-ci !!!\n");
+    }
+
+    return premier;
+}
+
+void chainerPropagation(grapheReseau *g_ptr, int idSrc) {
+    grapheReseau g = *g_ptr;
+
+    // Vérification de sécurité
+    if (g == NULL || idSrc < 0 || idSrc >= g->V || g->articles[idSrc] == ELEMENT_VIDE) {
+        printf("Article source invalide.\n");
+        return;
+    }
+
+    // 1. Initialisation du tableau de présence (0 et 1)
+    // tab_helper[i] == 1 signifie que l'article i appartient à la chaîne
+    int *tab_helper = (int *)calloc(g->V, sizeof(int));
+    if (tab_helper == NULL) return;
+
+    tab_helper[idSrc] = 1; // La source est le point de départ
+
+    // 2. Création du tableau qui va stocker les articles trouvés
+    // On alloue V car au maximum tous les articles pourraient être dans la chaîne
+    ELEMENT *sorted_articles = (ELEMENT *)malloc(g->V * sizeof(ELEMENT));
+    if (sorted_articles == NULL) { free(tab_helper); return; }
+
+    int nb_trouves = 0;
+    // On ajoute la source comme premier élément du tableau à afficher
+    sorted_articles[nb_trouves++] = g->articles[idSrc];///////////////////////////////////////////////
+
+    // 3. Remplissage du tableau selon la propagation
+    // On parcourt les articles pour voir qui cite qui
+    // Note: On peut boucler plusieurs fois pour s'assurer de capter les citations indirectes
+    int modification = 1;
+    while (modification) {
+        modification = 0;
+        for (int i = 0; i < g->V; i++) {
+            // Si l'article i n'est pas encore dans notre chaîne (tab_helper[i] == 0)
+            if (g->articles[i] != ELEMENT_VIDE && tab_helper[i] == 0) {
+
+                // On regarde ses citations dans sa liste d'adjacence
+                LISTE citations = g->adjList[i];
+                int trouve_citation = 0;
+
+                for (int j = 1; j <= citations->lg && !trouve_citation; j++) {
+                    ELEMENT art_cite = recuperer(citations, j);
+                    // Si l'article i cite un article qui est déjà marqué à 1
+                    if (art_cite != ELEMENT_VIDE && tab_helper[art_cite->id] == 1) {
+                        tab_helper[i] = 1;        // On le marque à 1
+                        sorted_articles[nb_trouves++] = g->articles[i]; // On l'ajoute au tableau
+                        modification = 1;         // On a trouvé un nouveau maillon
+                        trouve_citation = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // 4. TRI DU TABLEAU FINAL (Sauf la source qui reste en tête)
+    // On trie les articles trouvés (du 2ème au dernier) par date
+    for (int i = 1; i < nb_trouves; i++) {
+        ELEMENT key = sorted_articles[i];
+        int j = i - 1;
+        // On utilise ta fonction comparerDates pour le tri
+        while (j >= 1 && comparerDates(sorted_articles[j], key) > 0) {
+            sorted_articles[j + 1] = sorted_articles[j];
+            j--;
+
+        }
+        sorted_articles[j + 1] = key;
+    }
+
+    // 5. AFFICHAGE DU TABLEAU TRIÉ
+    printf("\n--- Chaine de Propagation ---\n");
+    // Affichage de l'article source
+    printf("%s\n", sorted_articles[0]->titre);
+
+    // Affichage des articles qui ont propagé l'info
+    for (int i = 1; i < nb_trouves; i++) {
+       printf("--> cite par %s (%02d/%02d/%d %02dh%02d)\n",
+            sorted_articles[i]->titre,
+            sorted_articles[i]->jour,
+            sorted_articles[i]->mois,
+            sorted_articles[i]->annee,
+            sorted_articles[i]->heure,
+            sorted_articles[i]->minute);
+    }
+
+    // Libération de la mémoire locale
+    free(tab_helper);
+    free(sorted_articles);
 }
 
 /* Stubs for missing functions declared in GRAPHE.h */
