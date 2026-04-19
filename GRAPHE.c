@@ -122,12 +122,14 @@ void detruireGraph(grapheReseau *g_ptr) {
 }
 
 void ajouterArticle(grapheReseau *g_ptr, ELEMENT art) {
-    grapheReseau g = *g_ptr;
+    grapheReseau g = *g
+    _ptr;
     if (g != NULL && art != ELEMENT_VIDE && art->id >= 0 && art->id < g->V) {
         if (g->articles[art->id] == ELEMENT_VIDE) {
-            g->articles[art->id] = art;
+          articlesInserer(g,art,art->id);
         }
     }
+
 }
 
 void supprimerArticle(grapheReseau *g_ptr, int idArt) {
@@ -485,7 +487,7 @@ void chainerPropagation(grapheReseau *g_ptr, int idSrc) {
 
     // 3. Remplissage du tableau selon la propagation
     // On parcourt les articles pour voir qui cite qui
-    // Note: On peut boucler plusieurs fois pour s'assurer de capter les citations indirectes
+    // Note: On peut boucler plusieurs fois pour s'assurer de capter les citations indirectes (gràce à mod=1)
     int modification = 1;
     while (modification) {
         modification = 0;
@@ -513,10 +515,11 @@ void chainerPropagation(grapheReseau *g_ptr, int idSrc) {
 
     // 4. TRI DU TABLEAU FINAL (Sauf la source qui reste en tête)
     // On trie les articles trouvés (du 2ème au dernier) par date
+    // même principe pour la fonction  trierpar date juste afin que laffichage correspond à lennonce
     for (int i = 1; i < nb_trouves; i++) {
         ELEMENT key = sorted_articles[i];
         int j = i - 1;
-        // On utilise ta fonction comparerDates pour le tri
+        // On utilise la fonction comparerDates pour le tri
         while (j >= 1 && comparerDates(sorted_articles[j], key) > 0) {
             sorted_articles[j + 1] = sorted_articles[j];
             j--;
@@ -548,81 +551,81 @@ void chainerPropagation(grapheReseau *g_ptr, int idSrc) {
 void simulerPropagation(grapheReseau *g_ptr, int idSrc)
 {
     grapheReseau g = *g_ptr;
+    int *visited = NULL;
+    LISTE file = NULL;
 
-    if (g == NULL || idSrc < 0 || idSrc >= g->V ||
-        g->articles[idSrc] == ELEMENT_VIDE) {
+    // Single entry check for safety
+    if (g == NULL || idSrc < 0 || idSrc >= g->V || g->articles[idSrc] == ELEMENT_VIDE) {
         printf("!!! Article source invalide !!!\n");
-        return;
-    }
+    } else {
+        visited = (int *)calloc(g->V, sizeof(int));
+        if (visited != NULL) {
+            file = listeCreer();
+            if (file != NULL) {
 
-    int *visited = (int *)calloc(g->V, sizeof(int));
-    int *niveau  = (int *)calloc(g->V, sizeof(int));
-    if (visited == NULL || niveau == NULL) {
-        free(visited); free(niveau);
-        return;
-    }
+                visited[idSrc] = 1;
+                inserer(file, g->articles[idSrc], listeTaille(file) + 1);
 
-    LISTE file = listeCreer();
+                int total_articles = 0;
+                int niveau_actuel = 0;
 
-    visited[idSrc] = 1;
-    niveau[idSrc]  = 0;
-    inserer(file, g->articles[idSrc], listeTaille(file) + 1);
+                printf("\n--- Simulation de Propagation depuis [%d] %s ---\n",
+                       idSrc, g->articles[idSrc]->titre);
 
-    int total_articles = 1;
-    int niveau_max     = 0;
+                while (!estVide(file)) {
+                    // Logic fix: Capture how many articles are at this specific level
+                    int nb_articles_niveau = listeTaille(file);
 
-    while (!estVide(file)) {
-        ELEMENT courant = recuperer(file, 1);
-        supprimer(file, 1);
+                    printf("Niveau %d : ", niveau_actuel);
+                    int premier = 1;
 
-        int idCourant   = courant->id;
-        int niv_courant = niveau[idCourant];
+                    // Process only the articles belonging to the current level
+                    for (int k = 0; k < nb_articles_niveau; k++) {
+                        ELEMENT courant = recuperer(file, 1);
+                        supprimer(file, 1);
+                        total_articles++;
 
-        for (int i = 0; i < g->V; i++) {
-            if (g->articles[i] != ELEMENT_VIDE && !visited[i]) {
-                int taille = g->adjList[i]->lg;
-                int cite   = 0;
-                for (int j = 1; j <= taille && !cite; j++) {
-                    ELEMENT e = recuperer(g->adjList[i], j);
-                    if (e != ELEMENT_VIDE && e->id == idCourant) {
-                        cite = 1;
+                        if (!premier) printf(", ");
+                        printf("%s", courant->titre);
+                        premier = 0;
+
+                        int idCourant = courant->id;
+
+                        // Scan the graph for articles citing 'idCourant'
+                        for (int i = 0; i < g->V; i++) {
+                            if (g->articles[i] != ELEMENT_VIDE && !visited[i]) {
+                                int taille_adj = listeTaille(g->adjList[i]);
+                                int cite = 0;
+                                for (int j = 1; j <= taille_adj && !cite; j++) {
+                                    ELEMENT e = recuperer(g->adjList[i], j);
+                                    if (e != ELEMENT_VIDE && e->id == idCourant)
+                                        cite = 1;
+                                }
+
+                                if (cite) {
+                                    visited[i] = 1;
+                                    inserer(file, g->articles[i], listeTaille(file) + 1);
+                                }
+                            }
+                        }
+                    }
+                    printf("\n");
+
+                    // Increment level only after the entire "batch" is done
+                    if (!estVide(file)) {
+                        niveau_actuel++;
                     }
                 }
-                if (cite) {
-                    visited[i] = 1;
-                    niveau[i]  = niv_courant + 1;
-                    if (niveau[i] > niveau_max) niveau_max = niveau[i];
-                    inserer(file, g->articles[i], listeTaille(file) + 1);
-                    total_articles++;
-                }
+
+                printf("%d niveau(x), %d article(s) atteint(s).\n",
+                       niveau_actuel + 1, total_articles);
+
+                listeDetruire(file);
             }
+            free(visited);
         }
     }
-
-    listeDetruire(file);
-
-    printf("\n--- Simulation de Propagation depuis [%d] %s ---\n",
-           idSrc, g->articles[idSrc]->titre);
-
-    for (int niv = 0; niv <= niveau_max; niv++) {
-        printf("Niveau %d : ", niv);
-        int premier = 1;
-        for (int i = 0; i < g->V; i++) {
-            if (g->articles[i] != ELEMENT_VIDE && visited[i] && niveau[i] == niv) {
-                if (!premier) printf(", ");
-                printf("%s", g->articles[i]->titre);
-                premier = 0;
-            }
-        }
-        printf("\n");
-    }
-
-    printf("%d niveau(x), %d article(s) atteint(s).\n", niveau_max + 1, total_articles);
-
-    free(visited);
-    free(niveau);
 }
-
 
 void articlesAccessibles(grapheReseau *g_ptr, int idSrc)
 {
@@ -699,9 +702,89 @@ void articlesAccessibles(grapheReseau *g_ptr, int idSrc)
     free(temp);
     free(visited);
 }
-/* Stubs for missing functions declared in GRAPHE.h */
-void simulerPropagation(grapheReseau *g, int idSrc) { printf("Simulation de propagation...\n"); }
-void analyserReseau(grapheReseau *g) { printf("Analyse du reseau...\n"); }
-void simulerSuppression(grapheReseau *g, int idArt) { printf("Simulation suppression...\n"); }
-int neutraliserPropagation(grapheReseau *g, int idSrc, int idDest) { return 0; }
-void sauvegarderGraphe(grapheReseau *g, const char *filename) { printf("Sauvegarde effectuee.\n"); }
+
+
+
+
+
+void simulerSuppression(grapheReseau *g_ptr, int idArt)
+{
+    grapheReseau g = *g_ptr;
+
+    if (g == NULL || idArt < 0 || idArt >= g->V ||
+        g->articles[idArt] == ELEMENT_VIDE) {
+        printf("!!! Article inexistant !!!\n");
+        return;
+    }
+
+    printf("\nSuppression de %s :\n", g->articles[idArt]->titre);
+
+    /* --- ce que idArt citait --- */
+    int nb_cites = g->adjList[idArt]->lg;
+    printf("- Citait (%d) : ", nb_cites);
+    for (int j = 1; j <= nb_cites; j++) {
+        ELEMENT e = recuperer(g->adjList[idArt], j);
+        if (e != ELEMENT_VIDE) {
+            printf("%s ", e->titre);
+        }
+    }
+    printf("\n");
+
+    /* --- ce qui citait idArt + on marque leurs ids --- */
+    int *citants = (int *)calloc(g->V, sizeof(int));
+    int nb_citants = g->degre_in[idArt];
+    printf("- Etait cite par (%d) : ", nb_citants);
+    int trouve = nb_citants;
+    int i = 0;
+    while (trouve != 0 && i < g->V) {
+        if (g->articles[i] != ELEMENT_VIDE && i != idArt) {
+            int taille = g->adjList[i]->lg;
+            int cite = 0;
+            for (int j = 1; j <= taille && !cite; j++) {
+                ELEMENT e = recuperer(g->adjList[i], j);
+                if (e != ELEMENT_VIDE && e->id == idArt) {
+                    cite = 1;
+                }
+            }
+            if (cite) {
+                printf("%s ", g->articles[i]->titre);
+                citants[i] = 1;  /* on marque */
+                trouve--;
+            }
+        }
+        i++;
+    }
+    printf("\n");
+
+    /* --- articles deconnectes = reutiliser citants[] --- */
+    printf("- Articles deconnectes : ");
+    for (int k = 0; k < g->V; k++) {
+        if (citants[k] == 1) {
+            printf("%s ", g->articles[k]->titre);
+        }
+    }
+    printf("\n");
+
+    free(citants);
+
+    /* --- suppression effective --- */
+    supprimerArticle(g_ptr, idArt);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

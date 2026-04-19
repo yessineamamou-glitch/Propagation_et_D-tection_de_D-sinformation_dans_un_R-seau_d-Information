@@ -3,6 +3,7 @@
 #include <string.h>
 #include "ELTARTICLE.h"
 
+
 ELEMENT elementCreer(ELEMENT e) {
     ELEMENT nouveau = (ELEMENT)malloc(sizeof(articleStruct));
     if (nouveau != NULL && e != NULL) {
