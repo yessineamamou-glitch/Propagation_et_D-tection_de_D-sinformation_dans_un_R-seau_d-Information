@@ -2,22 +2,19 @@
 #define ELTARTICLE_H
 
 typedef struct {
-int id;
-char titre[100];
-char source[50];
-int score_fiabilite;
-int jour, mois, annee;
-int heure, minute;
+    int id;
+    char titre[100];
+    char source[50];
+    int score_fiabilite;
+    int jour, mois, annee;
+    int heure, minute;
 } articleStruct, *ELEMENT;
+
 #define ELEMENT_VIDE NULL
 
-
-ELEMENT elementCreer(ELEMENT e);
-void elementDetruire(ELEMENT e);
-void elementLire(ELEMENT *e);
-void elementAffecter(ELEMENT *e1, ELEMENT e2);
-void elementCopier(ELEMENT *e1, ELEMENT e2);
-int elementComparer(ELEMENT e1, ELEMENT e2);
-void elementAfficher(ELEMENT e);
+ELEMENT creerArticle(int id, char *titre, char *source, int score, int j, int m, int a, int h, int min);
+void afficherArticle(ELEMENT e);
+void detruireArticle(ELEMENT e);
+int comparerDates(ELEMENT art1, ELEMENT art2);
 
 #endif

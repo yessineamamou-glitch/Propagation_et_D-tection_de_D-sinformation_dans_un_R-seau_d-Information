@@ -1,175 +1,192 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "LISTE.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-
-
-
-/* =========================================================
-   IMPLEMENTATION: contigue
-   ========================================================= */
-
-
-int articlesEstVide(grapheReseau g) {
-    return (g->V == 0);
-}
-
-int articlesInserer(grapheReseau g, ELEMENT e, int pos) {
-    int i;
-    if ((pos < 1) || (pos > g->V + 1)) {
-        printf("\nPosition invalide");
-        return 0;
-    }
-    for (i = g->V; i >= pos; i--) {
-        elementAffecter(&g->articles[i + 1], g->articles[i]);
-    }
-    elementAffecter(&g->articles[pos], e);
-    (g->V)++;
-    return 1;
-}
-
-int articlesSupprimer(grapheReseau g, int pos) {
-    int i;
-    if (articlesEstVide(g)) {
-        printf("\nListe vide");
-        return 0;
-    }
-    if ((pos < 1) || (pos > g->V)) {
-        printf("\nPosition invalide");
-        return 0;
-    }
-    elementDetruire(g->articles[pos]);
-    for (i = pos; i < g->V; i++) {
-        elementAffecter(&g->articles[i], g->articles[i + 1]);
-    }
-    (g->V)--;
-    return 1;
-}
-
-void articlesAfficher(grapheReseau g) {
-    int i;
-    for (i = 1; i <= g->V; i++) {
-        elementAfficher(g->articles[i]);
-    }
-}
-
-ELEMENT recupererArticle(grapheReseau g, int pos) {
-    if ((pos < 1) || (pos > g->V)) {
-        return NULL;
-    }
-    return g->articles[pos];
-}
-
-/* =========================================================
-   IMPLEMENTATION: simplement chaine
-   ========================================================= */
-
-
-NOEUD noeudCreer(ELEMENT e) {
-    NOEUD n = (NOEUD)malloc(sizeof(structNoeud));
-    if(!n) {
-        printf("\nPlus d'espace");
-    } else {
-        elementAffecter(&n->info, e);
-        n->suivant = NULL;
-    }
-    return n;
-}
-
-void noeudDetruire(NOEUD n) {
-    elementDetruire(n->info);
-    free(n);
-}
-
-/* --- Opérations sur la Liste --- */
-
-LISTE listeCreer(void) {
+LISTE creerListe() {
     LISTE L = (LISTE)malloc(sizeof(laStruct));
-    if (L) {
-        L->lg = 0;
+
+    if (L != NULL) {
         L->tete = NULL;
+        L->lg = 0;
     }
+
     return L;
 }
 
 int estVide(LISTE L) {
-    return (L->lg == 0);
-}
+    int vide;
 
-int estSaturee(LISTE L) {
-    NOEUD temp = (NOEUD)malloc(sizeof(structNoeud));
-    if(temp != NULL) {
-        free(temp);
-        return 0; // Mémoire non saturée
-    }
-    return 1;
-}
-
-int inserer(LISTE L, ELEMENT e, int pos) {
-    if (estSaturee(L)) return 0;
-    if (pos < 1 || pos > L->lg + 1) return 0;
-
-    NOEUD n = noeudCreer(e);
-    if (pos == 1) {
-        n->suivant = L->tete;
-        L->tete = n;
+    if (L == NULL) {
+        vide = 1;
     } else {
-        NOEUD p, q = L->tete;
-        for (int i = 1; i < pos; i++) {
-            p = q;
-            q = q->suivant;
-        }
-        p->suivant = n;
-        n->suivant = q;
+        vide = (L->tete == NULL) ? 1 : 0;
     }
-    L->lg++;
-    return 1;
+
+    return vide;
 }
 
-int supprimer(LISTE L, int pos) {
-    if (estVide(L) || pos < 1 || pos > L->lg) return 0;
+int listeTaille(LISTE L) {
+    int taille;
 
-    NOEUD p, q = L->tete;
-    if (pos == 1) {
-        L->tete = L->tete->suivant;
+    if (L == NULL) {
+        taille = 0;
     } else {
-        for (int i = 1; i < pos; i++) {
-            p = q;
-            q = q->suivant;
-        }
-        p->suivant = q->suivant;
+        taille = L->lg;
     }
-    noeudDetruire(q);
-    L->lg--;
-    return 1;
+
+    return taille;
+}
+
+LISTE inserer(LISTE L, ELEMENT e, int pos) {
+    LISTE result = L;
+
+    if (L != NULL) {
+        NOEUD nouveau = (NOEUD)malloc(sizeof(structNoeud));
+
+        if (nouveau != NULL) {
+            nouveau->info = e;
+
+            if (pos >= 1 && pos <= L->lg + 1) {
+                if (pos == 1) {
+                    nouveau->suivant = L->tete;
+                    L->tete = nouveau;
+                    L->lg++;
+                } else {
+                    int count = 1;
+                    NOEUD temp = L->tete;
+
+                    while (temp != NULL && count < pos - 1) {
+                        temp = temp->suivant;
+                        count++;
+                    }
+
+                    if (temp != NULL) {
+                        nouveau->suivant = temp->suivant;
+                        temp->suivant = nouveau;
+                        L->lg++;
+                    } else {
+                        printf("!!! Position invalide !!!\n");
+                        free(nouveau);
+                    }
+                }
+            } else {
+                printf("!!! Position invalide !!!\n");
+                free(nouveau);
+            }
+        }
+    }
+
+    return result;
 }
 
 ELEMENT recuperer(LISTE L, int pos) {
-    if (estVide(L) || pos < 1 || pos > L->lg) return elementCreer(ELEMENT_VIDE);
+    ELEMENT element = ELEMENT_VIDE;
 
-    NOEUD p = L->tete;
-    for (int i = 1; i < pos; i++)
-        p = p->suivant;
+    if (L != NULL) {
+        int count = 1;
+        NOEUD temp = L->tete;
 
-    ELEMENT elt = elementCreer(p->info);
+        while (temp != NULL && count <= pos) {
+            if (count == pos) {
+                element = temp->info;
+            }
+            temp = temp->suivant;
+            count++;
+        }
+    }
 
-    return elt;
+    return element;
 }
 
-void listeAfficher(LISTE L) {
-    NOEUD p = L->tete;
-    while (p != NULL) {
-        elementAfficher(p->info);
-        p = p->suivant;
+LISTE auxSupprimerPos1(LISTE L) {
+    LISTE result = L;
+
+    if (L != NULL && L->tete != NULL) {
+        NOEUD temp = L->tete->suivant;
+        free(L->tete);
+        L->tete = temp;
+        L->lg--;
+    }
+
+    return result;
+}
+
+LISTE auxSupprimerPosN(LISTE L, int pos) {
+    LISTE result = L;
+
+    if (L != NULL) {
+        int count = 1;
+        NOEUD temp = L->tete;
+
+        while (temp != NULL && count < pos - 1) {
+            temp = temp->suivant;
+            count++;
+        }
+
+        if (temp != NULL && temp->suivant != NULL) {
+            NOEUD toDelete = temp->suivant;
+            temp->suivant = toDelete->suivant;
+            free(toDelete);
+            L->lg--;
+        } else {
+            printf("!!! Position invalide !!!\n");
+        }
+    }
+
+    return result;
+}
+
+LISTE supprimer(LISTE L, int pos) {
+    LISTE result = L;
+
+    if (L != NULL) {
+        if (pos >= 1 && pos <= L->lg) {
+            if (pos == 1) {
+                result = auxSupprimerPos1(L);
+            } else {
+                result = auxSupprimerPosN(L, pos);
+            }
+        } else {
+            printf("!!! Position invalide !!!\n");
+        }
+    }
+
+    return result;
+}
+
+void auxAfficherListe(NOEUD tete) {
+    if (tete == NULL) {
+        printf("!!! Liste vide !!!\n");
+    } else {
+        while (tete != NULL) {
+            afficherArticle(tete->info);
+            tete = tete->suivant;
+        }
     }
 }
 
-void listeDetruire(LISTE L) {
-    NOEUD q = L->tete;
-    while (q != NULL) {
-        NOEUD p = q;
-        q = q->suivant;
-        noeudDetruire(p);
+void afficherListe(LISTE L) {
+    if (L == NULL) {
+        printf("!!! Liste vide !!!\n");
+    } else {
+        auxAfficherListe(L->tete);
     }
-    free(L);
+}
+
+LISTE detruireListe(LISTE L) {
+    LISTE result = NULL;
+
+    if (L != NULL) {
+        NOEUD temp = L->tete;
+
+        while (temp != NULL) {
+            NOEUD suivant = temp->suivant;
+            free(temp);
+            temp = suivant;
+        }
+
+        free(L);
+    }
+
+    return result;
 }

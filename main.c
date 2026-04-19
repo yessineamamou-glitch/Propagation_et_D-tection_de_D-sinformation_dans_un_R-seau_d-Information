@@ -3,11 +3,42 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <windows.h>
-
+#include "ELTARTICLE.h"  // Add this line
 grapheReseau g = NULL;
 int grapheCharge = 0;
 char nomFichier[100] = "";
+
+
+void nettoyerChaine(char *str) {
+    if (str == NULL) return;
+
+    int i = 0, j = 0;
+    int len = strlen(str);
+    int dansUnMot = 0;
+
+    char temp[100];
+    while (i < len && isspace(str[i])) i++;
+
+    while (i < len) {
+        if (isspace(str[i])) {
+            if (dansUnMot) {
+                temp[j++] = '_';
+                dansUnMot = 0;
+            }
+            while (i < len && isspace(str[i])) i++;
+        } else {
+            temp[j++] = str[i++];
+            dansUnMot = 1;
+        }
+    }
+
+    if (j > 0 && temp[j-1] == '_') j--;
+    temp[j] = '\0';
+
+    strcpy(str, temp);
+}
 
 int main() {
     int choix;
@@ -48,14 +79,14 @@ int main() {
         switch (choix) {
             case 0:
                 if (grapheCharge) {
-                    sauvegarderGraphe(&g, nomFichier);
-                    detruireGraph(&g);
+                    sauvegarderGraphe(g, nomFichier);
+                    detruireGraphe(g);
                 }
                 system("cls");
                 printf("\n");
-                printf("========================================================\n");
+                printf(" =======================================================\n");
                 printf("||                                                      ||\n");
-                printf("||                    Au revoir !                        ||\n");
+                printf("||                    Au revoir !                       ||\n");
                 printf("||                                                      ||\n");
                 printf("========================================================\n");
                 Sleep(1500);
@@ -71,10 +102,10 @@ int main() {
                 }
 
                 if (g != NULL) {
-                    detruireGraph(&g);
+                    detruireGraphe(g);
                 }
 
-                chargerGraph(&g, nomFichier);
+                g = chargerGraphe(nomFichier);
                 if (g != NULL) {
                     grapheCharge = 1;
                     printf("\n");
@@ -100,82 +131,75 @@ int main() {
             case 2:
                 system("cls");
                 if (!grapheCharge) {
-                    printf("\n");
-                    printf("========================================================\n");
-                    printf("||        !!! ERROR - Graphe non charge !!!             ||\n");
-                    printf("||   Veuillez d'abord charger le graphe (option 1)     ||\n");
-                    printf("========================================================\n");
-                    Sleep(2000);
+                    printf("!!! ERROR - Graphe non charge !!!\n");
+                    Sleep(1000);
                 } else {
                     int id, jour, mois, annee, heure, minute, score;
                     char titre[100], source[50];
 
-                    printf("ID : ");
-                    scanf("%d", &id);
-                    printf("Titre : ");
-                    scanf("%s", titre);
-                    printf("Source : ");
-                    scanf("%s", source);
+                    do {
+                        printf("Entrez l'ID (0-%d) : ", g->V - 1);
+                        scanf("%d", &id);
+                        if (id < 0 || id >= g->V ) {
+                            printf("!!! ID invalide. Reessayez. !!!\n");}
+                        if (g->articles[id] != ELEMENT_VIDE) {
+                            printf("!!! ID deja utilise. Reessayez. !!!\n");}
+
+                    } while (id < 0 || id >= g->V || g->articles[id] != ELEMENT_VIDE);
+
+                while (getchar() != '\n');
+
+                printf("Titre : ");
+                fgets(titre, sizeof(titre), stdin);
+                titre[strcspn(titre, "\n")] = 0;
+                nettoyerChaine(titre);           // Remplacer les espaces par '_'
+
+                printf("Source : ");
+                fgets(source, sizeof(source), stdin);
+                source[strcspn(source, "\n")] = 0;
+                nettoyerChaine(source);          // Remplacer les espaces par '_'
+
+                do {
                     printf("Score de fiabilite (0-100) : ");
                     scanf("%d", &score);
-
-                    if (score < 0 || score > 100) {
-                        printf("\n");
-                        printf("========================================================\n");
-                        printf("||  !!! ERROR - Score doit etre entre 0 et 100 !!!    ||\n");
-                        printf("========================================================\n");
-                        Sleep(1000);
-                    } else {
-                        printf("Jour : ");
-                        scanf("%d", &jour);
-                        printf("Mois : ");
-                        scanf("%d", &mois);
-                        printf("Annee : ");
-                        scanf("%d", &annee);
-                        printf("Heure : ");
-                        scanf("%d", &heure);
-                        printf("Minute : ");
-                        scanf("%d", &minute);
-
-                        // Populate a temporary struct to pass to elementCreer
-                        articleStruct temp;
-                        temp.id = id;
-                        strncpy(temp.titre, titre, 99);
-                        temp.titre[99] = '\0';
-                        strncpy(temp.source, source, 49);
-                        temp.source[49] = '\0';
-                        temp.score_fiabilite = score;
-                        temp.jour = jour;
-                        temp.mois = mois;
-                        temp.annee = annee;
-                        temp.heure = heure;
-                        temp.minute = minute;
-
-                        ELEMENT art = elementCreer(&temp);
-
-                        // Check manually since ajouterArticle is void
-                        if (id >= 0 && id < g->V && g->articles[id] == NULL) {
-                            ajouterArticle(&g, art);
-                            printf("\n");
-                            printf("========================================================\n");
-                            printf("||                                                      ||\n");
-                            printf("||          Article ajoute avec succes !               ||\n");
-                            printf("||                                                      ||\n");
-                            printf("========================================================\n");
-                            Sleep(1000);
-                        } else {
-                            printf("\n");
-                            printf("========================================================\n");
-                            printf("||  !!! ERROR - ID invalide ou deja existant !!!       ||\n");
-                            printf("========================================================\n");
-                            elementDetruire(art);
-                            Sleep(1000);
-                        }
-                    }
-                    printf("\nAppuyez sur Entree pour continuer...");
-                    getchar(); getchar();
+                } while (score < 0 || score > 100);
+                // CONTROLE SEPARE DATE
+                int dateValide = 0;
+                while (!dateValide) {
+                    printf("Date (JJ MM AAAA) : ");
+                    if (scanf("%d %d %d", &jour, &mois, &annee) == 3) {
+                        if (mois >= 1 && mois <= 12 && jour >= 1 && jour <= 31){
+                            dateValide = 1;}
+                    else printf("!!! Erreur : Date invalide (ex: 15 03 2026) !!!\n");
+                } else {
+                    while(getchar() != '\n');
                 }
-                break;
+            }
+
+                // CONTROLE SEPARE HEURE
+                int heureValide = 0;
+                while (!heureValide) {
+                    printf("Heure (HH MM) : ");
+                    if (scanf("%d %d", &heure, &minute) == 2) {
+                        if (heure >= 0 && heure <= 23 && minute >= 0 && minute <= 59) heureValide = 1;
+                        else printf("!!! Erreur : Heure invalide (ex: 14 30) !!!\n");
+                    } else {
+                        while(getchar() != '\n');
+                }
+            }
+                ELEMENT art = creerArticle(id, titre, source, score, jour, mois, annee, heure, minute);
+                if (art != ELEMENT_VIDE) {
+                    if (ajouterArticle(g, art)) {
+                        printf("\nArticle ajoute avec succes !\n");
+                    } else {
+                        detruireArticle(art);
+                        printf("\n!!! Erreur lors de l'ajout au graphe !!!\n");}
+                }
+            }
+            printf("\nAppuyez sur Entree pour continuer...");
+            getchar(); getchar();
+            break;
+
 
             case 3:
                 system("cls");
@@ -193,9 +217,7 @@ int main() {
                     printf("ID destination : ");
                     scanf("%d", &idDest);
 
-                    // Check bounds since ajouterCitation is void
-                    if (idSrc >= 0 && idSrc < g->V && idDest >= 0 && idDest < g->V && g->articles[idSrc] != NULL && g->articles[idDest] != NULL) {
-                        ajouterCitation(&g, idSrc, idDest);
+                    if (ajouterCitation(g, idSrc, idDest)) {
                         printf("\n");
                         printf("========================================================\n");
                         printf("||                                                      ||\n");
@@ -229,8 +251,7 @@ int main() {
                     printf("ID article a supprimer : ");
                     scanf("%d", &idArt);
 
-                    if (idArt >= 0 && idArt < g->V && g->articles[idArt] != NULL) {
-                        supprimerArticle(&g, idArt);
+                    if (supprimerArticle(g, idArt)) {
                         printf("\n");
                         printf("========================================================\n");
                         printf("||                                                      ||\n");
@@ -266,19 +287,18 @@ int main() {
                     printf("ID destination : ");
                     scanf("%d", &idDest);
 
-                    if (idSrc >= 0 && idSrc < g->V && idDest >= 0 && idDest < g->V) {
-                        supprimerCitation(&g, idSrc, idDest);
+                    if (supprimerCitation(g, idSrc, idDest)) {
                         printf("\n");
                         printf("========================================================\n");
                         printf("||                                                      ||\n");
-                        printf("||      Action effectuee (Citation supprimee) !         ||\n");
+                        printf("||              Citation supprimee !                    ||\n");
                         printf("||                                                      ||\n");
                         printf("========================================================\n");
                         Sleep(1000);
                     } else {
                         printf("\n");
                         printf("========================================================\n");
-                        printf("||       !!! ERROR - Identifiants invalides !!!        ||\n");
+                        printf("||       !!! ERROR - Citation inexistante !!!          ||\n");
                         printf("========================================================\n");
                         Sleep(1000);
                     }
@@ -299,7 +319,7 @@ int main() {
                 } else {
                     printf("\n");
                     printf("========================================================\n");
-                    afficherGraphe(&g);
+                    afficherGraphe(g);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -321,7 +341,7 @@ int main() {
                     scanf("%d", &idSrc);
                     printf("\n");
                     printf("========================================================\n");
-                    articlesCites(&g, idSrc);
+                    articlesCites(g, idSrc);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -343,7 +363,7 @@ int main() {
                     scanf("%d", &idDest);
                     printf("\n");
                     printf("========================================================\n");
-                    articlesCitants(&g, idDest);
+                    articlesCitants(g, idDest);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -364,12 +384,12 @@ int main() {
                     printf("========================================================\n");
                     printf("||          SOURCES ORIGINALES                         ||\n");
                     printf("========================================================\n");
-                    sourcesOriginales(&g);
+                    sourcesOriginales(g);
                     printf("\n");
                     printf("========================================================\n");
                     printf("||            ARTICLES ISOLES                         ||\n");
                     printf("========================================================\n");
-                    articlesIsoles(&g);
+                    articlesIsoles(g);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -386,11 +406,11 @@ int main() {
                     printf("========================================================\n");
                     Sleep(2000);
                 } else {
-                    ELEMENT e = articlePlusCite(&g);
+                    ELEMENT e = articlePlusCite(g);
                     printf("\n");
                     printf("========================================================\n");
                     if (e != ELEMENT_VIDE) {
-                        elementAfficher(e);
+                        afficherArticle(e);
                     } else {
                         printf("||       !!! ERROR - Aucun article trouve !!!          ||\n");
                     }
@@ -412,7 +432,7 @@ int main() {
                 } else {
                     printf("\n");
                     printf("========================================================\n");
-                    trierParDate(&g);
+                    trierParDate(g);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -434,8 +454,7 @@ int main() {
                     scanf("%d", &idDest);
                     printf("\n");
                     printf("========================================================\n");
-                    // Note: premierCitant is assumed to be defined in your implementation files
-                    premierCitant(&g, idDest);
+                    premierCitant(g, idDest);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -457,7 +476,7 @@ int main() {
                     scanf("%d", &idSrc);
                     printf("\n");
                     printf("========================================================\n");
-                    chainerPropagation(&g, idSrc);
+                    chainePropagation(g, idSrc);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -479,7 +498,7 @@ int main() {
                     scanf("%d", &idSrc);
                     printf("\n");
                     printf("========================================================\n");
-                    simulerPropagation(&g, idSrc);
+                    simulerPropagation(g, idSrc);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -498,7 +517,7 @@ int main() {
                 } else {
                     printf("\n");
                     printf("========================================================\n");
-                    analyserReseau(&g);
+                    analyserReseau(g);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -517,8 +536,7 @@ int main() {
                 } else {
                     printf("\n");
                     printf("========================================================\n");
-                    // Note: articlesSuspectsCites is assumed to be defined in your implementation files
-                    articlesSuspectsCites(&g);
+                    articlesSuspectsCites(g);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -540,7 +558,7 @@ int main() {
                     scanf("%d", &idArt);
                     printf("\n");
                     printf("========================================================\n");
-                    simulerSuppression(&g, idArt);
+                    simulerSuppression(g, idArt);
                     printf("========================================================\n");
                     printf("\nAppuyez sur Entree pour continuer...");
                     getchar(); getchar();
@@ -562,7 +580,7 @@ int main() {
                     scanf("%d", &idSrc);
                     printf("ID destination : ");
                     scanf("%d", &idDest);
-                    int removed = neutraliserPropagation(&g, idSrc, idDest);
+                    int removed = neutraliserPropagation(g, idSrc, idDest);
                     printf("\n");
                     printf("========================================================\n");
                     printf("||                                                      ||\n");

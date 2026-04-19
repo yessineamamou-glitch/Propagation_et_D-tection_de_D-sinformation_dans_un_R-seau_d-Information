@@ -37,43 +37,50 @@
 	"GRAPHE.h"
 	"LISTE.h"
 
-1776330217 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.c
-	<stdio.h>
-	<stdlib.h>
+1776637561 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.c
+	"GRAPHE.h"
+	"FAKESDB.h"
 	<string.h>
-	"ELTARTICLE.h"
+	<stdlib.h>
+	<stdio.h>
+
+1776634968 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.h
 	"LISTE.h"
+
+1776630208 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.h
+	"ELTARTICLE.h"
+
+1776630208 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.h
+
+1776634968 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\fakesdb.h
 	"GRAPHE.h"
 
-1776330247 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\graphe.h
+1776630208 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.c
 	"LISTE.h"
+	<stdlib.h>
+	<stdio.h>
 
-1776263129 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.h
+1776634968 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\main.c
+	"GRAPHE.h"
+	"fakesdb.h"
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	<ctype.h>
+	<windows.h>
 	"ELTARTICLE.h"
 
-1776608577 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.h
+1776630208 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.c
+	"ELTARTICLE.h"
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
 
-1776546060 c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\fakesdb.h
+1776634748 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\fakesdb.c
+	"FAKESDB.h"
+	"GRAPHE.h"
 	<string.h>
 	<ctype.h>
-
-1776263258 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\liste.c
-	<stdio.h>
 	<stdlib.h>
-	"LISTE.h"
-
-1775305357 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\main.c
 	<stdio.h>
-	<stdlib.h>
-	<string.h>
-	<windows.h>
-	"GRAPHE.h"
-
-1776543306 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\eltarticle.c
-	<stdio.h>
-	<stdlib.h>
-	<string.h>
-	"ELTARTICLE.h"
-
-1776203898 source:c:\users\azizb\desktop\isg\projet asd 2\détection _de _désinformation_asd_beji_amamou\fakesdb.c
 

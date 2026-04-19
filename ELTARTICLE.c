@@ -1,59 +1,55 @@
-#include <stdio.h>
+#include "ELTARTICLE.h"
 #include <stdlib.h>
 #include <string.h>
-#include "ELTARTICLE.h"
+#include <stdio.h>
 
+ELEMENT creerArticle(int id, char *titre, char *source, int score, int j, int m, int a, int h, int min) {
+    ELEMENT e = (ELEMENT)malloc(sizeof(articleStruct));
+    if (e == NULL) return ELEMENT_VIDE;
 
-ELEMENT elementCreer(ELEMENT e) {
-    ELEMENT nouveau = (ELEMENT)malloc(sizeof(articleStruct));
-    if (nouveau != NULL && e != NULL) {
-        elementCopier(&nouveau, e);
+    e->id = id;
+    strncpy(e->titre, titre, 99);
+    e->titre[99] = '\0';
+    strncpy(e->source, source, 49);
+    e->source[49] = '\0';
+    e->score_fiabilite = score;
+    e->jour = j;
+    e->mois = m;
+    e->annee = a;
+    e->heure = h;
+    e->minute = min;
+
+    return e;
+}
+
+void afficherArticle(ELEMENT e) {
+    if (e == ELEMENT_VIDE) {
+        printf("!!! Article invalide !!!\n");
+    } else {
+        printf("%s (id:%d, source:%s, score:%d, %02d/%02d/%04d %02dh%02d)\n", e->titre, e->id, e->source, e->score_fiabilite,e->jour, e->mois, e->annee, e->heure, e->minute);
     }
-    return nouveau;
 }
 
-void elementCopier(ELEMENT *e1, ELEMENT e2) {
-    (*e1)->id = e2->id;
-    strcpy((*e1)->titre, e2->titre);
-    strcpy((*e1)->source, e2->source);
-    (*e1)->score_fiabilite = e2->score_fiabilite;
-    (*e1)->jour = e2->jour;
-    (*e1)->mois = e2->mois;
-    (*e1)->annee = e2->annee;
-    (*e1)->heure = e2->heure;
-    (*e1)->minute = e2->minute;
-}
-
-
-void elementDetruire(ELEMENT e) {
-    if (e != NULL) {
+void detruireArticle(ELEMENT e) {
+    if (e != ELEMENT_VIDE) {
         free(e);
     }
 }
 
-void elementAffecter(ELEMENT *e1, ELEMENT e2) {
-    *e1 = e2;
-}
-void elementLire(ELEMENT *e) {
-    if (*e == NULL) *e = elementCreer(ELEMENT_VIDE);
-    printf("ID : "); scanf("%d", &((*e)->id));
-    printf("Titre : "); scanf("%s", (*e)->titre);
-    printf("Source : "); scanf("%s", (*e)->source);
-    printf("Score (0-10) : "); scanf("%d", &((*e)->score_fiabilite));
-    printf("Date (JJ MM AAAA) : ");
-    scanf("%d %d %d", &((*e)->jour), &((*e)->mois), &((*e)->annee));
-    printf("Heure (HH MM) : ");
-    scanf("%d %d", &((*e)->heure), &((*e)->minute));
-}
+int comparerDates(ELEMENT art1, ELEMENT art2) {
+    int resultat;
 
-int elementComparer(ELEMENT e1, ELEMENT e2) {
-    return (e1->id - e2->id);
-}
-
-void elementAfficher(ELEMENT e) {
-    if (e != NULL) {
-        printf("ID: %d | Titre: %s | Source: %s | Score: %d | Date: %02d/%02d/%d %02d:%02d\n",
-               e->id, e->titre, e->source, e->score_fiabilite,
-               e->jour, e->mois, e->annee, e->heure, e->minute);
+    if (art1->annee != art2->annee) {
+        resultat = art1->annee - art2->annee;
+    } else if (art1->mois != art2->mois) {
+        resultat = art1->mois - art2->mois;
+    } else if (art1->jour != art2->jour) {
+        resultat = art1->jour - art2->jour;
+    } else if (art1->heure != art2->heure) {
+        resultat = art1->heure - art2->heure;
+    } else {
+        resultat = art1->minute-art2->minute;
     }
+
+    return resultat;
 }

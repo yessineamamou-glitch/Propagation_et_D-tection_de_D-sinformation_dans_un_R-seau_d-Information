@@ -1,147 +1,111 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "FAKESDB.h"
+#include "GRAPHE.h"
 #include <string.h>
-/* Convertit une chaîne en minuscules */
-/* static : limite la fonction au fichier actuel (évite les conflits de noms).
-   inline : suggère au compilateur d'intégrer le code directement pour gagner en vitesse. */
-static inline void stringLower(char *str, char *result, int maxLen) {
-    int i = 0;
+#include <ctype.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-    /* Boucle tant qu'on n'atteint pas la fin de la chaîne (\0)
-       ET qu'on ne dépasse pas la taille maximale autorisée (maxLen - 1). */
-    while (i < maxLen - 1 && str[i] != '\0') {
+int contientMotClef(char *texte, const char *motclef) {
+    char *copie = (char *)malloc(strlen(texte) + 1);
+    strcpy(copie, texte);
 
-        /* tolower : convertit un caractère en minuscule.
-           (unsigned char)str[i] : "cast" de sécurité pour éviter les erreurs avec les accents.
-           result[i] : on stocke le résultat dans le nouveau tableau. */
-        result[i] = stringLower((unsigned char)str[i]);
-
-        i++; // Incrémentation du compteur
+    for (int i = 0; copie[i]; i++) {
+        copie[i] = tolower(copie[i]);
+        if (copie[i] == '_') copie[i] = ' ';
     }
 
-    /* Important : On ajoute manuellement le caractère nul à la fin
-       pour marquer la fin de la nouvelle chaîne de caractères. */
-    result[i] = '\0';
+    int result = strstr(copie, motclef) != NULL ? 1 : 0;
+    free(copie);
+    return result;
 }
 
-
-/* Recherche insensible à la casse */
-/* strstrCase : renvoie 1 (vrai) si trouvé, 0 (faux) sinon.
-   const char * : indique que la fonction ne modifiera pas les chaînes originales. */
-static inline int strstrCase(const char *haystack, const char *needle) {
-
-    /* Déclaration de deux zones mémoires temporaires (tampons).
-       h pour le texte principal, n pour la recherche. */
-    char h[500], n[200];
-
-    /* On convertit les deux chaînes en minuscules avant de comparer.
-       (char*) : on convertit temporairement le 'const' en pointeur simple
-       pour que la fonction stringLower l'accepte. */
-    stringLower((char*)haystack, h, 500);
-    stringLower((char*)needle, n, 200);
-
-    /* strstr : cherche la première occurrence de 'n' dans 'h'.
-       Si strstr ne renvoie pas NULL, cela signifie que le mot a été trouvé. */
-    return strstr(h, n) != NULL;
-}
-
-int analyserArticle(ELEMENT art)
-{
+int analyserArticle(ELEMENT art) {
     int score_suspicion = 0;
 
-    /* +40 si le titre contient un element de BASE_FAKES */
-    for (int i = 0; i < NB_FAKES; i++) {
-        if (strstrCase(art->titre, BASE_FAKES[i])) {
-            score_suspicion += 40;
+    if (art != ELEMENT_VIDE) {
+        for (int i = 0; i < NB_FAKES; i++) {
+            if (contientMotClef(art->titre, BASE_FAKES[i])) {
+                score_suspicion += 40;
+            }
         }
-    }
 
-    /* +10 par mot suspect trouve dans le titre */
-    for (int i = 0; i < NB_SUSPECTS; i++) {
-        if (strstrCase(art->titre, MOTS_SUSPECTS[i])) {
-            score_suspicion += 10;
+        for (int i = 0; i < NB_SUSPECTS; i++) {
+            if (contientMotClef(art->titre, MOTS_SUSPECTS[i])) {
+                score_suspicion += 10;
+            }
         }
-    }
 
-    /* Mise a jour du score de fiabilite */
-    int nouveau_score = 100 - score_suspicion;
-    if (nouveau_score < 0) nouveau_score = 0;
-    art->score_fiabilite = nouveau_score;
+        art->score_fiabilite = score_suspicion > 100 ? 0 : 100 - score_suspicion;
+    }
 
     return score_suspicion;
 }
-void analyserReseau(grapheReseau *g_ptr)
-{
-    grapheReseau g = *g_ptr;
 
+void analyserReseau(grapheReseau g) {
     if (g == NULL) {
         printf("!!! Graphe vide !!!\n");
-        return;
-    }
+    } else {
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE) {
+                int score_susp = analyserArticle(g->articles[i]);
 
-    printf("\n--- Analyse du Reseau ---\n");
-
-    for (int i = 0; i < g->V; i++) {
-        if (g->articles[i] != ELEMENT_VIDE) {
-            int score_suspicion = analyserArticle(g->articles[i]);
-            int fiabilite = g->articles[i]->score_fiabilite;
-
-            if (fiabilite < 40) {
-                printf("[SUSPECT] %s (score: %d)\n", g->articles[i]->titre, fiabilite);
-            } else if (fiabilite < 70) {
-                printf("[DOUTEUX] %s (score: %d)\n", g->articles[i]->titre, fiabilite);
-            } else {
-                printf("[FIABLE ] %s (score: %d)\n", g->articles[i]->titre, fiabilite);
+                if (g->articles[i]->score_fiabilite < 40) {
+                    printf("[SUSPECT] %s (score: %d)\n", g->articles[i]->titre, g->articles[i]->score_fiabilite);
+                    for (int j = 0; j < NB_FAKES; j++) {
+                        if (contientMotClef(g->articles[i]->titre, BASE_FAKES[j])) {
+                            printf("          \"%s\"\n", BASE_FAKES[j]);
+                        }
+                    }
+                    for (int j = 0; j < NB_SUSPECTS; j++) {
+                        if (contientMotClef(g->articles[i]->titre, MOTS_SUSPECTS[j])) {
+                            printf("          \"%s\"\n", MOTS_SUSPECTS[j]);
+                        }
+                    }
+                } else if (g->articles[i]->score_fiabilite < 70) {
+                    printf("[DOUTEUX] %s (score: %d)\n", g->articles[i]->titre, g->articles[i]->score_fiabilite);
+                } else {
+                    printf("[FIABLE ] %s (score: %d)\n", g->articles[i]->titre, g->articles[i]->score_fiabilite);
+                }
             }
         }
     }
 }
-void articlesSuspectsCites(grapheReseau *g_ptr)
-{
-    grapheReseau g = *g_ptr;
 
+void articlesSuspectsCites(grapheReseau g) {
     if (g == NULL) {
         printf("!!! Graphe vide !!!\n");
-        return;
-    }
+    } else {
+        int *suspects = (int *)malloc(g->V * sizeof(int));
+        int count = 0;
 
-    /* collecter les articles suspects qui sont cites */
-    ELEMENT *temp = (ELEMENT *)malloc(g->V * sizeof(ELEMENT));
-    int count = 0;
-
-    for (int i = 0; i < g->V; i++) {
-        if (g->articles[i] != ELEMENT_VIDE &&
-            g->articles[i]->score_fiabilite < 40 &&
-            g->degre_in[i] > 0) {
-            temp[count++] = g->articles[i];
+        for (int i = 0; i < g->V; i++) {
+            if (g->articles[i] != ELEMENT_VIDE && g->articles[i]->score_fiabilite < 40 && g->degre_in[i] > 0) {
+                suspects[count] = i;
+                count++;
+            }
         }
-    }
 
-    if (count == 0) {
-        printf("!!! Aucun article suspect cite !!!\n");
-        free(temp);
-        return;
-    }
+        if (count == 0) {
+            printf("!!! Aucun article suspect cite !!!\n");
+        } else {
+            for (int i = 0; i < count - 1; i++) {
+                for (int j = i + 1; j < count; j++) {
+                    if (g->degre_in[suspects[i]] < g->degre_in[suspects[j]]) {
+                        int temp = suspects[i];
+                        suspects[i] = suspects[j];
+                        suspects[j] = temp;
+                    }
+                }
+            }
 
-    /* tri par insertion par degre_in decroissant */
-    for (int i = 1; i < count; i++) {
-        ELEMENT key = temp[i];
-        int key_id  = key->id;
-        int j = i - 1;
-        while (j >= 0 && g->degre_in[temp[j]->id] < g->degre_in[key_id]) {
-            temp[j + 1] = temp[j];
-            j--;
+            for (int i = 0; i < count; i++) {
+                printf("%s (score:%d, cite par %d articles)\n",
+                       g->articles[suspects[i]]->titre,
+                       g->articles[suspects[i]]->score_fiabilite,
+                       g->degre_in[suspects[i]]);
+            }
         }
-        temp[j + 1] = key;
-    }
 
-    printf("\n--- Articles Suspects les Plus Cites ---\n");
-    for (int i = 0; i < count; i++) {
-        printf("%s (score:%d, cite par %d article(s))\n",
-               temp[i]->titre,
-               temp[i]->score_fiabilite,
-               g->degre_in[temp[i]->id]);
+        free(suspects);
     }
-
-    free(temp);
 }
