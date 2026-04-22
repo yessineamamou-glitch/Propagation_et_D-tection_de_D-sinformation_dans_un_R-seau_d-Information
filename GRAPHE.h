@@ -30,6 +30,5 @@ void chainePropagation(grapheReseau g, int idSrc);
 void simulerPropagation(grapheReseau g, int idSrc);
 void articlesAccessibles(grapheReseau g, int idSrc);
 void simulerSuppression(grapheReseau g, int idArt);
-static void dfsTousPaths(grapheReseau g, int idCourant, int idDest, int *chemin, int profondeur, int *visited, int *meilleurChemin, int *meilleurLen);
 int neutraliserPropagation(grapheReseau g, int idSrc, int idDest);
 #endif
