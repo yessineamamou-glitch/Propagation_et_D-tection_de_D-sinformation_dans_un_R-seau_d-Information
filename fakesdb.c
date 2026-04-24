@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h>'
 
 int contientMotClef(char *texte, const char *motclef) {
     char *copie = (char *)malloc(strlen(texte) + 1);

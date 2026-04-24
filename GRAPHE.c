@@ -736,10 +736,11 @@ int neutraliserPropagation(grapheReseau g, int idSrc, int idDest) {
             free(parent);
             free(visited);
             free(supprime);
+
         } else {
             int cheminExiste = 1;
             while (cheminExiste) {
-
+00
                 for (int i = 0; i < g->V; i++) {
                     parent[i]  = -1;
                     visited[i] = 0;
@@ -773,36 +774,40 @@ int neutraliserPropagation(grapheReseau g, int idSrc, int idDest) {
                                 file = inserer(file, g->articles[voisin->id], listeTaille(file) + 1);
                                 j++;
                             }
-                        } else {
-                            j++;
-                        }
+                        } else {j++;}
+
+
                     }
                 }
 
                 file = detruireListe(file);
-
+//  chemin 7aadher cb
                 if (found == 0) {
                     cheminExiste = 0;
                 } else {
                     int chemin[10000];
                     int len = 0;
                     int cur = idDest;
+                    // on creer la nouvelle liste avec un chemin claire
                     while (cur != -1) {
                         chemin[len++] = cur;
                         cur = parent[cur];
                     }
+
                     for (int i = 0; i < len / 2; i++) {
                         int tmp = chemin[i];
                         chemin[i] = chemin[len - 1 - i];
                         chemin[len - 1 - i] = tmp;
                     }
-
+            //aucun intermidiaire
                     if (len <= 2) {
                         supprime[idDest] = 1;
                         printf("Citation directe bloquee : %s --> %s\n",
                                g->articles[idSrc]->titre,
                                g->articles[idDest]->titre);
-                    } else {
+                    }
+                    //il ya intermidiaire on cherche maintenatn l article qui admt les bigger degree_in
+                     else {
                         int bestIdx   = 1;
                         int bestDegre = g->degre_in[chemin[1]];
                         for (int i = 2; i <= len - 2; i++) {
@@ -812,7 +817,7 @@ int neutraliserPropagation(grapheReseau g, int idSrc, int idDest) {
                             }
                         }
 
-                        int toBlock = chemin[bestIdx];
+                        int toBlock = chemin[bestIdx];// selectione larticle qui admet le bigger degree in
                         printf("Article supprime : %s (score:%d)\n",
                                g->articles[toBlock]->titre,
                                g->articles[toBlock]->score_fiabilite);
