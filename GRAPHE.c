@@ -740,7 +740,7 @@ int neutraliserPropagation(grapheReseau g, int idSrc, int idDest) {
         } else {
             int cheminExiste = 1;
             while (cheminExiste) {
-00
+
                 for (int i = 0; i < g->V; i++) {
                     parent[i]  = -1;
                     visited[i] = 0;
